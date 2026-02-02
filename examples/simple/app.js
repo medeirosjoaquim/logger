@@ -1,51 +1,36 @@
 /**
  * Universal Sentry Logger - Complete Feature Demo
  *
- * This app demonstrates all features of the Universal Sentry-Compatible Logger:
- * - Error tracking & breadcrumbs
- * - Metrics API
- * - Structured Logs
- * - Feature Flags
- * - User Feedback
- * - Attachments
- * - Distributed Tracing
- * - AI Monitoring (mock)
+ * Dark theme with lime contrast
+ * Features: Metrics, Logs, Flags, Feedback, Tracing, AI, Scope
  */
 
-// Import logger as "Sentry" to demonstrate drop-in replacement
 import * as Sentry from '@universal-logger/core';
 
-// Import all our new features
 import {
   getLocalLogs,
   clearLocalData,
-  // Metrics
   metrics,
   getMetrics,
-  // Structured Logs
   logger,
   getLogger,
-  // Feature Flags
   addFeatureFlagEvaluation,
   getFeatureFlags,
   featureFlagsIntegration,
-  // Feedback
   showReportDialog,
   createFeedbackWidgetButton,
-  // Attachments
   addAttachment,
-  // Tracing
   startSpan,
   startInactiveSpan,
   getActiveSpan,
 } from '@universal-logger/core';
 
-// Initialize Sentry with all features
+// Initialize
 Sentry.init({
   debug: true,
   environment: 'development',
   release: '2.0.0',
-  maxBreadcrumbs: 50,
+  maxBreadcrumbs: 100,
   attachStacktrace: true,
   initialScope: {
     tags: { app: 'feature-demo' },
@@ -56,25 +41,24 @@ Sentry.init({
   ],
 });
 
-// Set additional context
 Sentry.setTag('component', 'demo-app');
 Sentry.setContext('app_info', {
   version: '2.0.0',
-  features: ['metrics', 'logs', 'flags', 'feedback', 'tracing'],
+  features: ['metrics', 'logs', 'flags', 'feedback', 'tracing', 'ai'],
 });
 
-console.log('[App] Universal Logger initialized with all features!');
+console.log('[App] Universal Logger initialized');
 
 // ============================================
-// Feature Flags Demo
+// Feature Flags
 // ============================================
 
-// Simulate feature flag evaluations
 const FEATURES = {
-  darkMode: false,
+  darkMode: true,
   betaFeatures: true,
-  newCheckout: true,
-  aiAssistant: false,
+  newCheckout: false,
+  aiAssistant: true,
+  experimentalUI: false,
 };
 
 function checkFeatureFlag(flagName) {
@@ -83,13 +67,47 @@ function checkFeatureFlag(flagName) {
   return value;
 }
 
-// Evaluate some flags on startup
 checkFeatureFlag('darkMode');
 checkFeatureFlag('betaFeatures');
-checkFeatureFlag('newCheckout');
+checkFeatureFlag('aiAssistant');
 
 // ============================================
-// Todo App Logic (same as before)
+// Local Breadcrumb Collection
+// ============================================
+
+const collectedBreadcrumbs = [];
+
+function addBreadcrumb(crumb) {
+  collectedBreadcrumbs.push({
+    ...crumb,
+    timestamp: new Date().toISOString(),
+  });
+  if (collectedBreadcrumbs.length > 100) {
+    collectedBreadcrumbs.shift();
+  }
+  Sentry.addBreadcrumb(crumb);
+}
+
+// ============================================
+// AI Monitoring State
+// ============================================
+
+const aiLogs = [];
+
+function logAIEvent(type, data) {
+  const event = {
+    id: `ai-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    type,
+    timestamp: new Date().toISOString(),
+    ...data,
+  };
+  aiLogs.push(event);
+  logger.info(`AI ${type}`, { aiType: type, ...data });
+  return event;
+}
+
+// ============================================
+// Todo App
 // ============================================
 
 let todos = [];
@@ -106,14 +124,11 @@ function addTodo(text) {
   if (!text || text.trim() === '') {
     logger.warn('Attempted to add empty todo', { action: 'add_todo' });
     Sentry.captureMessage('Attempted to add empty todo', 'warning');
-    alert('Please enter a todo item!');
     return;
   }
 
-  // Track with metrics
   metrics.increment('todos.created');
 
-  // Use tracing span
   return startSpan({ name: 'addTodo', op: 'task' }, () => {
     const todo = {
       id: nextId++,
@@ -124,15 +139,14 @@ function addTodo(text) {
 
     todos.push(todo);
 
-    // Structured log
     logger.info('Todo created', {
       todoId: todo.id,
       text: todo.text.substring(0, 50),
     });
 
-    Sentry.addBreadcrumb({
+    addBreadcrumb({
       category: 'todo',
-      message: `Added todo: ${todo.text}`,
+      message: `Added: ${todo.text}`,
       level: 'info',
       data: { todoId: todo.id },
     });
@@ -154,16 +168,15 @@ function toggleTodo(id) {
 
   todo.completed = !todo.completed;
 
-  // Track completion with metrics
   if (todo.completed) {
     metrics.increment('todos.completed');
   }
 
   logger.debug('Todo toggled', { todoId: id, completed: todo.completed });
 
-  Sentry.addBreadcrumb({
+  addBreadcrumb({
     category: 'todo',
-    message: `Toggled todo: ${todo.text}`,
+    message: `Toggled: ${todo.text}`,
     level: 'info',
     data: { todoId: id, completed: todo.completed },
   });
@@ -183,9 +196,9 @@ function deleteTodo(id) {
   metrics.increment('todos.deleted');
   logger.info('Todo deleted', { todoId: id });
 
-  Sentry.addBreadcrumb({
+  addBreadcrumb({
     category: 'todo',
-    message: `Deleted todo: ${todo.text}`,
+    message: `Deleted: ${todo.text}`,
     level: 'warning',
     data: { todoId: id },
   });
@@ -201,7 +214,6 @@ function renderTodos() {
   activeCount.textContent = activeTodos.length;
   completedCount.textContent = completedTodos.length;
 
-  // Track metrics
   metrics.gauge('todos.active_count', activeTodos.length);
   metrics.gauge('todos.total_count', todos.length);
 
@@ -213,7 +225,7 @@ function renderTodos() {
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
         </svg>
-        <p>No todos yet. Add one above!</p>
+        <p>No todos yet</p>
       </div>
     `;
     return;
@@ -245,18 +257,23 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
-// ============================================
 // Event Listeners
-// ============================================
-
 addBtn.addEventListener('click', () => addTodo(todoInput.value));
 todoInput.addEventListener('keypress', (e) => {
   if (e.key === 'Enter') addTodo(todoInput.value);
 });
 
 // ============================================
-// Error Testing Buttons
+// Error Testing
 // ============================================
+
+function createHttpError(status, url, message) {
+  const error = new Error(message || `HTTP ${status}: ${url}`);
+  error.name = 'HttpError';
+  error.status = status;
+  error.url = url;
+  return error;
+}
 
 document.getElementById('throwErrorBtn').addEventListener('click', () => {
   try {
@@ -264,9 +281,7 @@ document.getElementById('throwErrorBtn').addEventListener('click', () => {
     logger.error('User triggered test error', { button: 'throwErrorBtn' });
     throw new Error('This is a test error!');
   } catch (error) {
-    Sentry.captureException(error, {
-      tags: { errorType: 'intentional' },
-    });
+    Sentry.captureException(error, { tags: { errorType: 'intentional' } });
   }
 });
 
@@ -289,36 +304,21 @@ document.getElementById('undefinedErrorBtn').addEventListener('click', () => {
   }
 });
 
-// Helper to create meaningful HTTP errors
-function createHttpError(status, url, message) {
-  const error = new Error(message || `HTTP ${status} Error: Request to ${url} failed`);
-  error.name = 'HttpError';
-  error.status = status;
-  error.url = url;
-  return error;
-}
-
 document.getElementById('badHttpBtn').addEventListener('click', async () => {
   const start = performance.now();
   const url = 'https://httpstat.us/500';
   try {
     const response = await fetch(url);
     if (!response.ok) {
-      const text = await response.text().catch(() => 'No response body');
-      throw createHttpError(
-        response.status,
-        url,
-        `HTTP 500 Internal Server Error from ${url} - ${text.substring(0, 100)}`
-      );
+      throw createHttpError(response.status, url, `HTTP 500 Internal Server Error`);
     }
   } catch (error) {
-    // If it's a network error, wrap it with more context
     if (error.name === 'TypeError' && error.message.includes('fetch')) {
-      error = createHttpError(500, url, `Network/CORS Error connecting to ${url} (Server Error simulation)`);
+      error = createHttpError(500, url, `Network/CORS Error (500 simulation)`);
     }
     metrics.timing('http.request_duration', performance.now() - start, { tags: { status: '500' } });
     metrics.increment('http.errors', 1, { tags: { status: '500' } });
-    Sentry.captureException(error, { 
+    Sentry.captureException(error, {
       tags: { errorType: 'http', httpStatus: '500' },
       contexts: { http: { url, method: 'GET', status_code: 500 } }
     });
@@ -331,20 +331,15 @@ document.getElementById('notFoundBtn').addEventListener('click', async () => {
   try {
     const response = await fetch(url);
     if (!response.ok) {
-      const text = await response.text().catch(() => 'No response body');
-      throw createHttpError(
-        response.status,
-        url,
-        `HTTP 404 Not Found: ${url} - Resource does not exist - ${text.substring(0, 100)}`
-      );
+      throw createHttpError(response.status, url, `HTTP 404 Not Found`);
     }
   } catch (error) {
     if (error.name === 'TypeError' && error.message.includes('fetch')) {
-      error = createHttpError(404, url, `Network/CORS Error connecting to ${url} (404 simulation)`);
+      error = createHttpError(404, url, `Network/CORS Error (404 simulation)`);
     }
     metrics.timing('http.request_duration', performance.now() - start, { tags: { status: '404' } });
     metrics.increment('http.errors', 1, { tags: { status: '404' } });
-    Sentry.captureException(error, { 
+    Sentry.captureException(error, {
       tags: { errorType: 'http', httpStatus: '404' },
       contexts: { http: { url, method: 'GET', status_code: 404 } }
     });
@@ -359,40 +354,33 @@ document.getElementById('timeoutBtn').addEventListener('click', async () => {
     const timeoutId = setTimeout(() => controller.abort(), 1000);
     const response = await fetch(url, { signal: controller.signal });
     clearTimeout(timeoutId);
-    if (!response.ok) throw createHttpError(response.status, url, 'Request failed');
   } catch (error) {
     const isTimeout = error.name === 'AbortError';
-    const errorContext = {
-      tags: { errorType: isTimeout ? 'timeout' : 'network' },
-      contexts: { 
-        http: { url, method: 'GET', timeout_ms: 1000 },
-        timeout: { requested: 1000, actual: Math.round(performance.now() - start) }
-      }
-    };
-    
     if (isTimeout) {
-      error = new Error(`Request Timeout: ${url} did not respond within 1000ms`);
+      error = new Error(`Request Timeout: ${url} (1000ms)`);
       error.name = 'TimeoutError';
-    } else if (error.name === 'TypeError' && error.message.includes('fetch')) {
-      error = new Error(`Network/CORS Error: Could not connect to ${url} (Timeout simulation)`);
+    } else if (error.name === 'TypeError') {
+      error = new Error(`Network/CORS Error (Timeout simulation)`);
       error.name = 'NetworkError';
     }
-    
-    metrics.timing('http.request_duration', performance.now() - start, { tags: { status: isTimeout ? 'timeout' : 'error' } });
+    metrics.timing('http.request_duration', performance.now() - start);
     metrics.increment(isTimeout ? 'http.timeouts' : 'http.errors');
-    Sentry.captureException(error, errorContext);
+    Sentry.captureException(error, {
+      tags: { errorType: isTimeout ? 'timeout' : 'network' },
+      contexts: { http: { url, method: 'GET', timeout_ms: 1000 } }
+    });
   }
 });
 
 // ============================================
-// Metrics Demo Buttons
+// Metrics Demo
 // ============================================
 
 document.getElementById('metricsCounterBtn').addEventListener('click', () => {
   metrics.increment('button.clicks', 1, { tags: { button: 'counter' } });
   metrics.increment('demo.counter');
   logger.info('Counter incremented');
-  showNotification('Counter incremented!');
+  showNotification('Counter incremented');
 });
 
 document.getElementById('metricsGaugeBtn').addEventListener('click', () => {
@@ -400,7 +388,7 @@ document.getElementById('metricsGaugeBtn').addEventListener('click', () => {
   metrics.gauge('demo.random_value', value);
   metrics.gauge('memory.simulated', value * 1024 * 1024, { unit: 'byte' });
   logger.info('Gauge recorded', { value });
-  showNotification(`Gauge set to ${value}`);
+  showNotification(`Gauge: ${value}`);
 });
 
 document.getElementById('metricsDistBtn').addEventListener('click', () => {
@@ -412,19 +400,18 @@ document.getElementById('metricsDistBtn').addEventListener('click', () => {
 
 document.getElementById('metricsTimingBtn').addEventListener('click', () => {
   const start = performance.now();
-  // Simulate some work
   for (let i = 0; i < 1000000; i++) { Math.sqrt(i); }
   const duration = performance.now() - start;
   metrics.timing('demo.computation', duration);
   logger.info('Timing recorded', { duration: duration.toFixed(2) });
-  showNotification(`Computation took ${duration.toFixed(2)}ms`);
+  showNotification(`Timing: ${duration.toFixed(2)}ms`);
 });
 
 document.getElementById('metricsSetBtn').addEventListener('click', () => {
   const userId = `user_${Math.floor(Math.random() * 1000)}`;
   metrics.set('demo.unique_users', userId);
   logger.info('Unique user tracked', { userId });
-  showNotification(`Tracked user: ${userId}`);
+  showNotification(`Tracked: ${userId}`);
 });
 
 // ============================================
@@ -442,12 +429,12 @@ document.getElementById('logDebugBtn').addEventListener('click', () => {
 });
 
 document.getElementById('logInfoBtn').addEventListener('click', () => {
-  logger.info('User performed action', { action: 'button_click', userId: 'demo' });
+  logger.info('User action', { action: 'button_click', userId: 'demo' });
   showNotification('Info log sent');
 });
 
 document.getElementById('logWarnBtn').addEventListener('click', () => {
-  logger.warn('Something might be wrong', { warning: 'demo warning' });
+  logger.warn('Something might be wrong', { warning: 'demo' });
   showNotification('Warning log sent');
 });
 
@@ -473,18 +460,18 @@ document.getElementById('flagCheckBtn').addEventListener('click', () => {
 });
 
 document.getElementById('flagToggleBtn').addEventListener('click', () => {
-  const flags = ['darkMode', 'betaFeatures', 'newCheckout', 'aiAssistant'];
+  const flags = Object.keys(FEATURES);
   const randomFlag = flags[Math.floor(Math.random() * flags.length)];
   FEATURES[randomFlag] = !FEATURES[randomFlag];
   const value = checkFeatureFlag(randomFlag);
   logger.info('Feature flag toggled', { flag: randomFlag, value });
-  showNotification(`Toggled "${randomFlag}" to ${value}`);
+  showNotification(`"${randomFlag}": ${value}`);
 });
 
 document.getElementById('flagListBtn').addEventListener('click', () => {
   const flags = getFeatureFlags();
-  logger.info('Feature flags retrieved', { flags });
-  console.log('Current feature flags:', flags);
+  logger.info('Feature flags retrieved', { count: Object.keys(flags).length });
+  console.log('Feature flags:', flags);
   showNotification(`${Object.keys(flags).length} flags tracked`);
 });
 
@@ -495,25 +482,24 @@ document.getElementById('flagListBtn').addEventListener('click', () => {
 document.getElementById('attachTextBtn').addEventListener('click', () => {
   addAttachment({
     filename: 'debug-info.txt',
-    data: `Debug info captured at ${new Date().toISOString()}\nTodos: ${todos.length}\nActive: ${todos.filter(t => !t.completed).length}`,
+    data: `Debug info: ${new Date().toISOString()}\nTodos: ${todos.length}`,
     contentType: 'text/plain',
   });
   logger.info('Text attachment added');
-  showNotification('Text attachment added!');
+  showNotification('Text attached');
 });
 
 document.getElementById('attachJsonBtn').addEventListener('click', () => {
   addAttachment({
     filename: 'app-state.json',
-    data: JSON.stringify({ todos, timestamp: Date.now(), features: FEATURES }, null, 2),
+    data: JSON.stringify({ todos, features: FEATURES }, null, 2),
     contentType: 'application/json',
   });
   logger.info('JSON attachment added');
-  showNotification('JSON attachment added!');
+  showNotification('JSON attached');
 });
 
 document.getElementById('attachBinaryBtn').addEventListener('click', () => {
-  // Create a small binary payload
   const bytes = new Uint8Array([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]);
   addAttachment({
     filename: 'binary-data.bin',
@@ -521,7 +507,7 @@ document.getElementById('attachBinaryBtn').addEventListener('click', () => {
     contentType: 'application/octet-stream',
   });
   logger.info('Binary attachment added');
-  showNotification('Binary attachment added!');
+  showNotification('Binary attached');
 });
 
 // ============================================
@@ -533,37 +519,200 @@ document.getElementById('tracingSimpleBtn').addEventListener('click', async () =
     await new Promise(resolve => setTimeout(resolve, 100));
     logger.info('Simple span completed');
   });
-  showNotification('Simple span recorded!');
+  showNotification('Simple span recorded');
 });
 
 document.getElementById('tracingNestedBtn').addEventListener('click', async () => {
   await startSpan({ name: 'parent-operation', op: 'demo.parent' }, async () => {
     await new Promise(resolve => setTimeout(resolve, 50));
 
-    await startSpan({ name: 'child-operation-1', op: 'demo.child' }, async () => {
+    await startSpan({ name: 'child-1', op: 'demo.child' }, async () => {
       await new Promise(resolve => setTimeout(resolve, 30));
     });
 
-    await startSpan({ name: 'child-operation-2', op: 'demo.child' }, async () => {
+    await startSpan({ name: 'child-2', op: 'demo.child' }, async () => {
       await new Promise(resolve => setTimeout(resolve, 40));
     });
 
     logger.info('Nested spans completed');
   });
-  showNotification('Nested spans recorded!');
+  showNotification('Nested spans recorded');
 });
 
 document.getElementById('tracingManualBtn').addEventListener('click', async () => {
   const span = startInactiveSpan({ name: 'manual-span', op: 'demo.manual' });
   span.setAttribute('custom.attribute', 'demo-value');
-
   await new Promise(resolve => setTimeout(resolve, 75));
-
   span.setStatus('ok');
   span.end();
-
   logger.info('Manual span completed', { spanId: span.spanId });
-  showNotification('Manual span recorded!');
+  showNotification('Manual span recorded');
+});
+
+// ============================================
+// AI Monitoring Demo
+// ============================================
+
+document.getElementById('aiChatBtn').addEventListener('click', async () => {
+  const start = performance.now();
+
+  addBreadcrumb({
+    category: 'ai',
+    message: 'Starting chat completion',
+    level: 'info',
+    data: { model: 'gpt-4', type: 'chat' },
+  });
+
+  await startSpan({ name: 'ai.chat', op: 'ai.chat_completion' }, async () => {
+    await new Promise(resolve => setTimeout(resolve, 150 + Math.random() * 200));
+
+    const event = logAIEvent('chat', {
+      model: 'gpt-4',
+      inputTokens: Math.floor(Math.random() * 500) + 100,
+      outputTokens: Math.floor(Math.random() * 300) + 50,
+      latency: performance.now() - start,
+    });
+
+    metrics.timing('ai.chat.latency', performance.now() - start);
+    metrics.increment('ai.chat.requests');
+  });
+
+  showNotification('Chat completion tracked');
+});
+
+document.getElementById('aiCompletionBtn').addEventListener('click', async () => {
+  const start = performance.now();
+
+  addBreadcrumb({
+    category: 'ai',
+    message: 'Starting text completion',
+    level: 'info',
+    data: { model: 'claude-3', type: 'completion' },
+  });
+
+  await startSpan({ name: 'ai.completion', op: 'ai.text_completion' }, async () => {
+    await new Promise(resolve => setTimeout(resolve, 100 + Math.random() * 150));
+
+    const event = logAIEvent('completion', {
+      model: 'claude-3-sonnet',
+      inputTokens: Math.floor(Math.random() * 200) + 50,
+      outputTokens: Math.floor(Math.random() * 500) + 100,
+      latency: performance.now() - start,
+    });
+
+    metrics.timing('ai.completion.latency', performance.now() - start);
+    metrics.increment('ai.completion.requests');
+  });
+
+  showNotification('Text completion tracked');
+});
+
+document.getElementById('aiPipelineBtn').addEventListener('click', async () => {
+  const start = performance.now();
+
+  addBreadcrumb({
+    category: 'ai',
+    message: 'Starting AI pipeline',
+    level: 'info',
+    data: { steps: ['embed', 'retrieve', 'generate'] },
+  });
+
+  await startSpan({ name: 'ai.pipeline', op: 'ai.pipeline' }, async () => {
+    // Embedding step
+    await startSpan({ name: 'ai.embed', op: 'ai.embedding' }, async () => {
+      await new Promise(resolve => setTimeout(resolve, 50));
+      logAIEvent('embedding', { model: 'text-embedding-ada-002', dimensions: 1536 });
+    });
+
+    // Retrieval step
+    await startSpan({ name: 'ai.retrieve', op: 'ai.retrieval' }, async () => {
+      await new Promise(resolve => setTimeout(resolve, 80));
+      logAIEvent('retrieval', { source: 'vector-db', documents: 5 });
+    });
+
+    // Generation step
+    await startSpan({ name: 'ai.generate', op: 'ai.generation' }, async () => {
+      await new Promise(resolve => setTimeout(resolve, 200));
+      logAIEvent('generation', { model: 'gpt-4', tokens: 350 });
+    });
+
+    metrics.timing('ai.pipeline.latency', performance.now() - start);
+    metrics.increment('ai.pipeline.requests');
+  });
+
+  showNotification('AI pipeline tracked');
+});
+
+// ============================================
+// Scope & Context Demo
+// ============================================
+
+document.getElementById('scopeUserBtn').addEventListener('click', () => {
+  const userId = `user_${Math.floor(Math.random() * 10000)}`;
+  Sentry.setUser({
+    id: userId,
+    email: `${userId}@example.com`,
+    username: userId,
+  });
+
+  addBreadcrumb({
+    category: 'auth',
+    message: `User set: ${userId}`,
+    level: 'info',
+  });
+
+  logger.info('User context set', { userId });
+  showNotification(`User: ${userId}`);
+});
+
+document.getElementById('scopeTagBtn').addEventListener('click', () => {
+  const tags = ['feature', 'experiment', 'version', 'region', 'tier'];
+  const tag = tags[Math.floor(Math.random() * tags.length)];
+  const value = `value_${Math.floor(Math.random() * 100)}`;
+
+  Sentry.setTag(tag, value);
+
+  addBreadcrumb({
+    category: 'context',
+    message: `Tag added: ${tag}=${value}`,
+    level: 'info',
+  });
+
+  logger.info('Tag added', { tag, value });
+  showNotification(`Tag: ${tag}=${value}`);
+});
+
+document.getElementById('scopeContextBtn').addEventListener('click', () => {
+  const contexts = ['device', 'browser', 'session', 'performance'];
+  const contextName = contexts[Math.floor(Math.random() * contexts.length)];
+
+  Sentry.setContext(contextName, {
+    timestamp: Date.now(),
+    random: Math.random(),
+    todoCount: todos.length,
+  });
+
+  addBreadcrumb({
+    category: 'context',
+    message: `Context set: ${contextName}`,
+    level: 'info',
+  });
+
+  logger.info('Context set', { context: contextName });
+  showNotification(`Context: ${contextName}`);
+});
+
+document.getElementById('scopeClearBtn').addEventListener('click', () => {
+  Sentry.setUser(null);
+
+  addBreadcrumb({
+    category: 'auth',
+    message: 'User context cleared',
+    level: 'info',
+  });
+
+  logger.info('Scope cleared');
+  showNotification('Scope cleared');
 });
 
 // ============================================
@@ -582,11 +731,10 @@ document.getElementById('feedbackDialogBtn').addEventListener('click', () => {
   });
 });
 
-// Create floating feedback widget
 const feedbackWidget = createFeedbackWidgetButton({
   position: 'bottom-left',
   triggerLabel: 'Feedback',
-  buttonColor: '#10b981',
+  buttonColor: '#a3e635',
 });
 
 // ============================================
@@ -602,8 +750,8 @@ function showNotification(message) {
   setTimeout(() => notification.classList.add('show'), 10);
   setTimeout(() => {
     notification.classList.remove('show');
-    setTimeout(() => notification.remove(), 300);
-  }, 2000);
+    setTimeout(() => notification.remove(), 200);
+  }, 1500);
 }
 
 // ============================================
@@ -617,11 +765,21 @@ const errorBadge = document.getElementById('errorBadge');
 const logContainer = document.getElementById('logContainer');
 
 let isPanelOpen = false;
+let currentTab = 'all';
 let _lastLogCount = 0;
+
+// Tab handling
+document.querySelectorAll('.log-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.log-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    currentTab = tab.dataset.tab;
+    renderLogs();
+  });
+});
 
 function toggleLogPanel() {
   isPanelOpen = !isPanelOpen;
-  logToggleBtn.classList.toggle('open', isPanelOpen);
   logPanel.classList.toggle('open', isPanelOpen);
   logPanelOverlay.classList.toggle('open', isPanelOpen);
   if (isPanelOpen) renderLogs();
@@ -652,7 +810,6 @@ function updateErrorBadge(logs) {
   }
 }
 
-// Convert structured log record to display format
 function structuredLogToDisplay(log) {
   return {
     id: log.logId,
@@ -666,68 +823,95 @@ function structuredLogToDisplay(log) {
   };
 }
 
-// Convert metric to display format
-function metricToDisplay(metric) {
+function breadcrumbToDisplay(crumb) {
   return {
-    id: `metric-${metric.name}-${Date.now()}`,
+    id: `bc-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    level: crumb.level || 'info',
+    timestamp: crumb.timestamp || new Date().toISOString(),
+    message: crumb.message,
+    type: 'breadcrumb',
+    category: crumb.category,
+    data: crumb.data,
+  };
+}
+
+function aiLogToDisplay(log) {
+  return {
+    id: log.id,
     level: 'info',
-    timestamp: new Date().toISOString(),
-    message: `${metric.type}: ${metric.name} = ${metric.value}`,
-    type: 'metric',
-    attributes: metric.tags || {},
-    metricType: metric.type,
-    metricName: metric.name,
-    metricValue: metric.value,
-    metricUnit: metric.unit,
+    timestamp: log.timestamp,
+    message: `${log.type}: ${log.model || log.source || 'unknown'}`,
+    type: 'ai',
+    aiType: log.type,
+    attributes: log,
   };
 }
 
 async function renderLogs() {
   try {
-    // Aggregate logs from multiple sources
-    const sentryLogs = await getLocalLogs();
+    const sentryLogs = await getLocalLogs() || [];
     const structuredLogs = getLogger().getBuffer().map(structuredLogToDisplay);
-    
-    // Combine all logs
-    const allLogs = [
-      ...(sentryLogs || []),
+    const breadcrumbs = collectedBreadcrumbs.map(breadcrumbToDisplay);
+    const aiDisplayLogs = aiLogs.map(aiLogToDisplay);
+
+    let allLogs = [
+      ...sentryLogs,
       ...structuredLogs,
+      ...breadcrumbs,
+      ...aiDisplayLogs,
     ];
-    
+
+    // Filter by tab
+    if (currentTab === 'errors') {
+      allLogs = allLogs.filter(l => l.level === 'error' || l.level === 'fatal' || l.exception);
+    } else if (currentTab === 'logs') {
+      allLogs = allLogs.filter(l => l.type === 'structured-log');
+    } else if (currentTab === 'metrics') {
+      allLogs = allLogs.filter(l => l.type === 'metric');
+    } else if (currentTab === 'breadcrumbs') {
+      allLogs = allLogs.filter(l => l.type === 'breadcrumb');
+    }
+
     _lastLogCount = allLogs.length;
     updateErrorBadge(sentryLogs);
 
     if (allLogs.length === 0) {
-      logContainer.innerHTML = '<div class="log-empty">No events yet. Try the buttons above!</div>';
+      const msg = currentTab === 'all' ? 'No events yet' : `No ${currentTab} events`;
+      logContainer.innerHTML = `<div class="log-empty">${msg}</div>`;
       return;
     }
 
-    // Sort by timestamp descending
-    const sortedLogs = allLogs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 100);
+    const sortedLogs = allLogs
+      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+      .slice(0, 100);
 
     logContainer.innerHTML = sortedLogs.map(log => {
       const level = log.level || 'info';
       const type = log.type || (log.exception ? 'exception' : 'message');
       let errorType = '';
       let message = log.message || '';
-      
-      // Extract extra context
+
       const contexts = log.contexts || {};
       const tags = log.tags || log.attributes || {};
       const httpContext = contexts.http || {};
-      const timeoutContext = contexts.timeout || {};
 
       if (log.exception) {
         errorType = log.exception.type || 'Error';
         message = log.exception.value || message || 'Unknown error';
       }
 
-      // Build context badges
       let contextBadges = '';
       if (type === 'structured-log') {
-        contextBadges += `<span class="context-badge log-type">structured</span>`;
+        contextBadges += `<span class="context-badge log-type">log</span>`;
       } else if (type === 'metric') {
-        contextBadges += `<span class="context-badge metric-type">${log.metricType}</span>`;
+        contextBadges += `<span class="context-badge metric-type">${log.metricType || 'metric'}</span>`;
+      } else if (type === 'breadcrumb') {
+        contextBadges += `<span class="context-badge log-type">breadcrumb</span>`;
+        if (log.category) {
+          contextBadges += `<span class="breadcrumb-category">${escapeHtml(log.category)}</span>`;
+        }
+      } else if (type === 'ai') {
+        contextBadges += `<span class="context-badge ai-type">${log.aiType || 'ai'}</span>`;
       }
       if (tags.errorType) {
         contextBadges += `<span class="context-badge error-type">${escapeHtml(tags.errorType)}</span>`;
@@ -735,54 +919,55 @@ async function renderLogs() {
       if (tags.httpStatus) {
         contextBadges += `<span class="context-badge http-status">HTTP ${escapeHtml(tags.httpStatus)}</span>`;
       }
-      if (httpContext.status_code) {
-        contextBadges += `<span class="context-badge http-status">Status: ${httpContext.status_code}</span>`;
-      }
 
-      // Build HTTP context info
       let httpInfoHtml = '';
-      if (httpContext.url || httpContext.method || httpContext.status_code) {
+      if (httpContext.url || httpContext.method) {
         httpInfoHtml = `
           <div class="log-http-info">
             ${httpContext.method ? `<span class="http-method">${httpContext.method}</span>` : ''}
-            ${httpContext.url ? `<span class="http-url" title="${escapeHtml(httpContext.url)}">${escapeHtml(httpContext.url.length > 50 ? httpContext.url.substring(0, 47) + '...' : httpContext.url)}</span>` : ''}
-            ${timeoutContext.requested ? `<span class="http-timeout">timeout: ${timeoutContext.requested}ms</span>` : ''}
+            ${httpContext.url ? `<span class="http-url">${escapeHtml(httpContext.url.substring(0, 50))}</span>` : ''}
           </div>
         `;
       }
-      
-      // Build attributes info for structured logs
+
       let attributesHtml = '';
-      if (type === 'structured-log' && log.attributes && Object.keys(log.attributes).length > 0) {
+      if ((type === 'structured-log' || type === 'ai') && log.attributes && Object.keys(log.attributes).length > 0) {
         const attrs = Object.entries(log.attributes)
-          .filter(([k]) => !k.startsWith('sentry.')) // Filter internal attrs
+          .filter(([k]) => !k.startsWith('sentry.') && k !== 'type' && k !== 'id' && k !== 'timestamp')
           .slice(0, 5)
-          .map(([k, v]) => `<span class="attr-item">${escapeHtml(k)}: ${escapeHtml(String(v).substring(0, 30))}</span>`)
+          .map(([k, v]) => `<span class="attr-item">${escapeHtml(k)}: ${escapeHtml(String(v).substring(0, 25))}</span>`)
           .join('');
         if (attrs) {
           attributesHtml = `<div class="log-attributes">${attrs}</div>`;
         }
       }
 
+      let breadcrumbDataHtml = '';
+      if (type === 'breadcrumb' && log.data && Object.keys(log.data).length > 0) {
+        const dataStr = JSON.stringify(log.data);
+        if (dataStr.length < 100) {
+          breadcrumbDataHtml = `<div class="breadcrumb-data">${escapeHtml(dataStr)}</div>`;
+        }
+      }
+
       let stackHtml = '';
       if (log.exception?.stacktrace?.frames?.length > 0) {
         const frames = [...log.exception.stacktrace.frames].reverse();
-        // Filter out less relevant frames for cleaner display
-        const relevantFrames = frames.filter(f => 
-          f.filename && 
-          !f.filename.includes('node_modules') && 
+        const relevantFrames = frames.filter(f =>
+          f.filename &&
+          !f.filename.includes('node_modules') &&
           !f.filename.includes('chrome-extension')
         );
         const displayFrames = relevantFrames.length > 0 ? relevantFrames : frames;
-        
+
         stackHtml = `
           <div class="log-stack">
-            ${displayFrames.slice(0, 5).map(frame => {
+            ${displayFrames.slice(0, 4).map(frame => {
               const fn = frame.function || '<anonymous>';
               const file = (frame.filename || 'unknown').split('/').pop();
               return `<div class="stack-frame"><span class="stack-fn">${escapeHtml(fn)}</span><span class="stack-loc">${escapeHtml(file)}:${frame.lineno || '?'}</span></div>`;
             }).join('')}
-            ${displayFrames.length > 5 ? `<div class="stack-more">+ ${displayFrames.length - 5} more</div>` : ''}
+            ${displayFrames.length > 4 ? `<div class="stack-more">+ ${displayFrames.length - 4} more</div>` : ''}
           </div>
         `;
       }
@@ -792,14 +977,14 @@ async function renderLogs() {
           <div class="log-meta">
             <span class="log-level ${level}">${level}</span>
             <span>${formatTime(log.timestamp)}</span>
-            <span>${type}</span>
             ${log.eventId ? `<span class="log-id">${log.eventId.slice(0, 8)}</span>` : ''}
-            ${log.id && !log.eventId ? `<span class="log-id">${log.id.slice(0, 8)}</span>` : ''}
+            ${log.id && !log.eventId ? `<span class="log-id">${String(log.id).slice(0, 8)}</span>` : ''}
           </div>
           ${errorType ? `<div class="log-error-type">${escapeHtml(errorType)}</div>` : ''}
           ${contextBadges ? `<div class="log-context-badges">${contextBadges}</div>` : ''}
           <div class="log-message">${escapeHtml(message)}</div>
           ${attributesHtml}
+          ${breadcrumbDataHtml}
           ${httpInfoHtml}
           ${stackHtml}
         </div>
@@ -807,7 +992,7 @@ async function renderLogs() {
     }).join('');
   } catch (error) {
     console.error('Error rendering logs:', error);
-    logContainer.innerHTML = `<div class="log-empty" style="color: #f56565;">Error: ${escapeHtml(error.message)}</div>`;
+    logContainer.innerHTML = `<div class="log-empty" style="color: var(--red);">Error: ${escapeHtml(error.message)}</div>`;
   }
 }
 
@@ -815,16 +1000,21 @@ document.getElementById('refreshLogsBtn').addEventListener('click', renderLogs);
 document.getElementById('clearLogsBtn').addEventListener('click', async () => {
   await clearLocalData();
   getLogger().clearBuffer();
+  aiLogs.length = 0;
+  collectedBreadcrumbs.length = 0;
   _lastLogCount = 0;
   await renderLogs();
 });
 
-// Auto-refresh - only re-render when log count changes to avoid blinking
+// Auto-refresh
 setInterval(async () => {
   const logs = await getLocalLogs();
   updateErrorBadge(logs);
-  if (isPanelOpen && logs && logs.length !== _lastLogCount) {
-    renderLogs();
+  if (isPanelOpen) {
+    const totalCount = (logs?.length || 0) + getLogger().getBuffer().length + aiLogs.length + collectedBreadcrumbs.length;
+    if (totalCount !== _lastLogCount) {
+      renderLogs();
+    }
   }
 }, 2000);
 
@@ -832,13 +1022,13 @@ setInterval(async () => {
 // Initialize
 // ============================================
 
-console.log('[App] Feature demo initialized!');
-logger.info('Application started', { version: '2.0.0', features: Object.keys(FEATURES) });
+console.log('[App] Feature demo ready');
+logger.info('Application started', { version: '2.0.0' });
 Sentry.captureMessage('Demo app started', 'info');
 renderLogs();
 
 setTimeout(() => {
-  addTodo('Try the Metrics buttons below!');
-  addTodo('Check out Feature Flags demo');
+  addTodo('Try the Metrics buttons');
+  addTodo('Check out AI Monitoring');
   addTodo('Test Structured Logs');
 }, 500);

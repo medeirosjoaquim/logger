@@ -3,96 +3,224 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Universal Logger - Complete Feature Demo</title>
+  <title>Universal Logger - Feature Demo</title>
   <style>
+    :root {
+      --bg-primary: #0a0a0a;
+      --bg-secondary: #111111;
+      --bg-card: #161616;
+      --bg-elevated: #1a1a1a;
+      --bg-hover: #222222;
+      --border-color: #2a2a2a;
+      --border-subtle: #1f1f1f;
+      --text-primary: #e5e5e5;
+      --text-secondary: #a3a3a3;
+      --text-muted: #666666;
+      --lime: #a3e635;
+      --lime-dim: #84cc16;
+      --lime-glow: rgba(163, 230, 53, 0.15);
+      --lime-border: rgba(163, 230, 53, 0.3);
+      --red: #ef4444;
+      --red-dim: rgba(239, 68, 68, 0.15);
+      --orange: #f97316;
+      --orange-dim: rgba(249, 115, 22, 0.15);
+      --blue: #3b82f6;
+      --blue-dim: rgba(59, 130, 246, 0.15);
+      --purple: #a855f7;
+      --purple-dim: rgba(168, 85, 247, 0.15);
+      --cyan: #22d3ee;
+      --cyan-dim: rgba(34, 211, 238, 0.15);
+      --pink: #ec4899;
+      --pink-dim: rgba(236, 72, 153, 0.15);
+    }
+
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
       min-height: 100vh;
-      padding: 20px;
+      line-height: 1.5;
     }
 
-    .container { max-width: 800px; margin: 0 auto; }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 32px 20px;
+    }
 
     .header {
       text-align: center;
-      color: white;
-      margin-bottom: 30px;
+      margin-bottom: 40px;
+      padding-bottom: 32px;
+      border-bottom: 1px solid var(--border-color);
     }
 
     .header h1 {
-      font-size: 2.5rem;
-      margin-bottom: 10px;
-      text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+      font-size: 2.25rem;
+      font-weight: 700;
+      color: var(--lime);
+      margin-bottom: 8px;
+      letter-spacing: -0.025em;
     }
 
-    .header p { font-size: 1.1rem; opacity: 0.9; }
-    .header .subtitle { font-size: 0.95rem; opacity: 0.8; margin-top: 8px; }
+    .header p {
+      font-size: 1rem;
+      color: var(--text-secondary);
+    }
+
+    .header .subtitle {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 12px;
+      font-family: 'Monaco', 'Menlo', monospace;
+      letter-spacing: 0.05em;
+    }
 
     .card {
-      background: white;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
       border-radius: 12px;
       padding: 24px;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-      margin-bottom: 20px;
+      margin-bottom: 16px;
+      transition: border-color 0.2s;
+    }
+
+    .card:hover {
+      border-color: var(--lime-border);
     }
 
     .card-title {
-      font-size: 1.2rem;
+      font-size: 1rem;
       font-weight: 600;
-      color: #2d3748;
-      margin-bottom: 16px;
+      color: var(--text-primary);
+      margin-bottom: 8px;
       display: flex;
       align-items: center;
       gap: 8px;
     }
 
-    .card-description {
-      color: #718096;
-      font-size: 0.95rem;
-      margin-bottom: 16px;
-      line-height: 1.5;
+    .card-title::before {
+      content: '';
+      width: 3px;
+      height: 16px;
+      background: var(--lime);
+      border-radius: 2px;
     }
 
-    .todo-input-container { display: flex; gap: 10px; margin-bottom: 20px; }
+    .card-description {
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      margin-bottom: 16px;
+    }
+
+    .todo-input-container {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
 
     .todo-input {
       flex: 1;
       padding: 12px 16px;
-      border: 2px solid #e2e8f0;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
       border-radius: 8px;
-      font-size: 1rem;
-      transition: border-color 0.2s;
+      font-size: 0.95rem;
+      color: var(--text-primary);
+      transition: all 0.2s;
     }
 
-    .todo-input:focus { outline: none; border-color: #667eea; }
+    .todo-input::placeholder { color: var(--text-muted); }
+    .todo-input:focus {
+      outline: none;
+      border-color: var(--lime);
+      box-shadow: 0 0 0 3px var(--lime-glow);
+    }
 
     .btn {
-      padding: 10px 18px;
+      padding: 10px 16px;
       border: none;
       border-radius: 8px;
-      font-size: 0.9rem;
-      font-weight: 600;
+      font-size: 0.85rem;
+      font-weight: 500;
       cursor: pointer;
-      transition: all 0.2s;
-      color: white;
+      transition: all 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
     }
 
-    .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+    .btn:hover { transform: translateY(-1px); }
     .btn:active { transform: translateY(0); }
 
-    .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-    .btn-danger { background: #f56565; }
-    .btn-warning { background: #ed8936; }
-    .btn-success { background: #48bb78; }
-    .btn-info { background: #4299e1; }
-    .btn-purple { background: #9f7aea; }
-    .btn-teal { background: #38b2ac; }
-    .btn-pink { background: #ed64a6; }
-    .btn-gray { background: #718096; }
-    .btn-small { padding: 6px 12px; font-size: 0.85rem; }
+    .btn-primary {
+      background: var(--lime);
+      color: #000;
+    }
+    .btn-primary:hover { background: var(--lime-dim); }
+
+    .btn-ghost {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+    }
+    .btn-ghost:hover {
+      border-color: var(--lime-border);
+      background: var(--bg-elevated);
+    }
+
+    .btn-danger {
+      background: var(--red-dim);
+      color: var(--red);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+    .btn-danger:hover { background: rgba(239, 68, 68, 0.25); }
+
+    .btn-warning {
+      background: var(--orange-dim);
+      color: var(--orange);
+      border: 1px solid rgba(249, 115, 22, 0.3);
+    }
+    .btn-warning:hover { background: rgba(249, 115, 22, 0.25); }
+
+    .btn-info {
+      background: var(--blue-dim);
+      color: var(--blue);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+    .btn-info:hover { background: rgba(59, 130, 246, 0.25); }
+
+    .btn-purple {
+      background: var(--purple-dim);
+      color: var(--purple);
+      border: 1px solid rgba(168, 85, 247, 0.3);
+    }
+    .btn-purple:hover { background: rgba(168, 85, 247, 0.25); }
+
+    .btn-cyan {
+      background: var(--cyan-dim);
+      color: var(--cyan);
+      border: 1px solid rgba(34, 211, 238, 0.3);
+    }
+    .btn-cyan:hover { background: rgba(34, 211, 238, 0.25); }
+
+    .btn-pink {
+      background: var(--pink-dim);
+      color: var(--pink);
+      border: 1px solid rgba(236, 72, 153, 0.3);
+    }
+    .btn-pink:hover { background: rgba(236, 72, 153, 0.25); }
+
+    .btn-lime {
+      background: var(--lime-glow);
+      color: var(--lime);
+      border: 1px solid var(--lime-border);
+    }
+    .btn-lime:hover { background: rgba(163, 230, 53, 0.25); }
+
+    .btn-small { padding: 6px 12px; font-size: 0.8rem; }
 
     .btn-group {
       display: flex;
@@ -107,41 +235,81 @@
       align-items: center;
       gap: 12px;
       padding: 12px;
-      border-bottom: 1px solid #e2e8f0;
-      transition: background-color 0.2s;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      transition: all 0.15s;
     }
 
-    .todo-item:hover { background-color: #f7fafc; }
-    .todo-item:last-child { border-bottom: none; }
-    .todo-item.completed .todo-text { text-decoration: line-through; opacity: 0.6; }
+    .todo-item:hover {
+      border-color: var(--border-color);
+      background: var(--bg-hover);
+    }
 
-    .todo-checkbox { width: 20px; height: 20px; cursor: pointer; }
-    .todo-text { flex: 1; font-size: 1rem; }
+    .todo-item.completed .todo-text {
+      text-decoration: line-through;
+      color: var(--text-muted);
+    }
+
+    .todo-checkbox {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+      accent-color: var(--lime);
+    }
+
+    .todo-text {
+      flex: 1;
+      font-size: 0.95rem;
+      color: var(--text-primary);
+    }
 
     .stats {
       display: flex;
       justify-content: space-around;
       margin-top: 20px;
       padding-top: 20px;
-      border-top: 1px solid #e2e8f0;
+      border-top: 1px solid var(--border-color);
     }
 
     .stat { text-align: center; }
-    .stat-value { font-size: 2rem; font-weight: bold; color: #667eea; }
-    .stat-label { font-size: 0.85rem; color: #718096; margin-top: 4px; }
+    .stat-value {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--lime);
+      font-variant-numeric: tabular-nums;
+    }
+    .stat-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: 4px;
+    }
 
-    .empty-state { text-align: center; padding: 40px 20px; color: #a0aec0; }
-    .empty-state svg { width: 64px; height: 64px; margin-bottom: 16px; opacity: 0.5; }
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-muted);
+    }
+    .empty-state svg {
+      width: 48px;
+      height: 48px;
+      margin-bottom: 12px;
+      opacity: 0.4;
+      stroke: var(--lime);
+    }
 
     .section-divider {
       display: flex;
       align-items: center;
       gap: 12px;
-      margin: 8px 0;
-      color: #a0aec0;
-      font-size: 0.8rem;
+      margin: 12px 0;
+      color: var(--text-muted);
+      font-size: 0.7rem;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.1em;
     }
 
     .section-divider::before,
@@ -149,7 +317,22 @@
       content: '';
       flex: 1;
       height: 1px;
-      background: #e2e8f0;
+      background: var(--border-color);
+    }
+
+    /* Grid Layout for cards */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    .card-grid .card {
+      margin-bottom: 0;
+    }
+
+    @media (max-width: 700px) {
+      .card-grid { grid-template-columns: 1fr; }
     }
 
     /* Log Panel Styles */
@@ -157,39 +340,43 @@
       position: fixed;
       bottom: 24px;
       right: 24px;
-      width: 56px;
-      height: 56px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      border: none;
+      width: 52px;
+      height: 52px;
+      border-radius: 12px;
+      background: var(--bg-card);
+      border: 1px solid var(--lime-border);
       cursor: pointer;
-      box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: all 0.3s ease;
+      transition: all 0.2s;
       z-index: 1000;
+      color: var(--lime);
+      font-weight: 600;
+      font-size: 0.75rem;
     }
 
-    .fab:hover { transform: scale(1.1); }
-    .fab-icon { font-size: 24px; transition: transform 0.3s ease; }
-    .fab.open .fab-icon { transform: rotate(45deg); }
+    .fab:hover {
+      background: var(--lime-glow);
+      border-color: var(--lime);
+      transform: scale(1.05);
+    }
 
     .fab-badge {
       position: absolute;
-      top: -4px;
-      right: -4px;
-      background: #f56565;
+      top: -6px;
+      right: -6px;
+      background: var(--red);
       color: white;
-      font-size: 11px;
-      font-weight: bold;
-      min-width: 20px;
-      height: 20px;
-      border-radius: 10px;
+      font-size: 10px;
+      font-weight: 700;
+      min-width: 18px;
+      height: 18px;
+      border-radius: 9px;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 0 6px;
+      padding: 0 5px;
     }
 
     .fab-badge.hidden { display: none; }
@@ -200,10 +387,11 @@
       left: 0;
       right: 0;
       bottom: 0;
-      background: rgba(0, 0, 0, 0.5);
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
       opacity: 0;
       visibility: hidden;
-      transition: all 0.3s ease;
+      transition: all 0.2s;
       z-index: 999;
     }
 
@@ -213,29 +401,25 @@
       position: fixed;
       bottom: 0;
       right: 0;
-      width: 520px;
+      width: 560px;
       max-width: 100%;
-      height: 70vh;
-      max-height: 600px;
-      background: #1a202c;
+      height: 75vh;
+      max-height: 700px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-bottom: none;
       border-radius: 16px 16px 0 0;
       transform: translateY(100%);
       transition: transform 0.3s ease;
       z-index: 1001;
       display: flex;
       flex-direction: column;
-      box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.3);
     }
 
     .log-panel.open { transform: translateY(0); }
 
     .log-viewer {
-      background: #1a202c;
-      border-radius: 16px 16px 0 0;
       padding: 20px;
-      color: #e2e8f0;
-      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-      font-size: 0.85rem;
       flex: 1;
       display: flex;
       flex-direction: column;
@@ -247,124 +431,199 @@
       justify-content: space-between;
       align-items: center;
       margin-bottom: 16px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid #4a5568;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border-color);
       flex-shrink: 0;
     }
 
-    .log-viewer-title { font-size: 1.1rem; font-weight: 600; color: #fff; }
+    .log-viewer-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--lime);
+    }
 
     .log-viewer-actions { display: flex; gap: 8px; }
 
-    .btn-icon {
-      padding: 6px 12px;
-      font-size: 0.8rem;
-      background: #2d3748;
-      color: #e2e8f0;
+    .log-tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 16px;
+      flex-shrink: 0;
     }
 
-    .btn-icon:hover { background: #4a5568; }
+    .log-tab {
+      padding: 8px 14px;
+      font-size: 0.8rem;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .log-tab:hover {
+      color: var(--text-primary);
+      background: var(--bg-hover);
+    }
+
+    .log-tab.active {
+      color: var(--lime);
+      background: var(--lime-glow);
+      border-color: var(--lime-border);
+    }
 
     #logContainer {
       flex: 1;
       overflow-y: auto;
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 0.8rem;
     }
 
     .log-entry {
-      padding: 8px 12px;
+      padding: 10px 12px;
       margin-bottom: 8px;
-      border-radius: 6px;
-      border-left: 3px solid;
-      background: #2d3748;
-      animation: slideIn 0.2s ease-out;
+      border-radius: 8px;
+      border-left: 3px solid var(--border-color);
+      background: var(--bg-card);
+      animation: fadeIn 0.15s ease-out;
     }
 
-    @keyframes slideIn {
-      from { opacity: 0; transform: translateX(-10px); }
-      to { opacity: 1; transform: translateX(0); }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
-    .log-entry.error { border-left-color: #f56565; background: rgba(245, 101, 101, 0.1); }
-    .log-entry.warning { border-left-color: #ed8936; background: rgba(237, 137, 54, 0.1); }
-    .log-entry.info { border-left-color: #4299e1; background: rgba(66, 153, 225, 0.1); }
-    .log-entry.debug { border-left-color: #a0aec0; background: rgba(160, 174, 192, 0.1); }
-    .log-entry.trace { border-left-color: #cbd5e0; background: rgba(203, 213, 224, 0.1); }
-    .log-entry.fatal { border-left-color: #e53e3e; background: rgba(229, 62, 62, 0.15); }
-    .log-entry.structured-log { border-left-color: #63b3ed; background: rgba(99, 179, 237, 0.08); }
-    .log-entry.metric { border-left-color: #68d391; background: rgba(104, 211, 145, 0.08); }
+    .log-entry.error { border-left-color: var(--red); background: var(--red-dim); }
+    .log-entry.warning { border-left-color: var(--orange); background: var(--orange-dim); }
+    .log-entry.info { border-left-color: var(--blue); background: var(--blue-dim); }
+    .log-entry.debug { border-left-color: var(--text-muted); }
+    .log-entry.trace { border-left-color: var(--text-muted); }
+    .log-entry.fatal { border-left-color: var(--red); background: rgba(239, 68, 68, 0.2); }
+    .log-entry.structured-log { border-left-color: var(--cyan); background: var(--cyan-dim); }
+    .log-entry.metric { border-left-color: var(--lime); background: var(--lime-glow); }
+    .log-entry.breadcrumb { border-left-color: var(--purple); background: var(--purple-dim); }
+    .log-entry.ai { border-left-color: var(--pink); background: var(--pink-dim); }
 
-    .log-meta { display: flex; gap: 12px; font-size: 0.75rem; color: #a0aec0; margin-bottom: 4px; }
-    .log-level { font-weight: 600; text-transform: uppercase; }
-    .log-level.error { color: #f56565; }
-    .log-level.warning { color: #ed8936; }
-    .log-level.info { color: #4299e1; }
-    .log-level.debug { color: #a0aec0; }
+    .log-meta {
+      display: flex;
+      gap: 10px;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
 
-    .log-message { color: #e2e8f0; margin-bottom: 4px; }
-    .log-error-type { font-weight: 600; color: #fc8181; font-size: 0.9rem; margin-bottom: 4px; }
-    .log-id { font-family: monospace; background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; }
-
-    .log-stack { margin-top: 8px; padding: 8px; background: rgba(0,0,0,0.3); border-radius: 4px; font-size: 0.75rem; }
-    .stack-frame { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
-    .stack-frame:last-child { border-bottom: none; }
-    .stack-fn { color: #90cdf4; font-weight: 500; }
-    .stack-loc { color: #a0aec0; margin-left: 12px; white-space: nowrap; }
-    .stack-more { color: #718096; font-style: italic; padding-top: 4px; }
-
-    .log-empty { text-align: center; padding: 40px; color: #718096; }
-
-    /* Context Badges */
-    .log-context-badges { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 6px; }
-    .context-badge { 
-      font-size: 0.65rem; 
-      padding: 2px 6px; 
-      border-radius: 3px; 
-      font-weight: 600; 
+    .log-level {
+      font-weight: 600;
       text-transform: uppercase;
     }
-    .context-badge.error-type { background: rgba(237, 137, 54, 0.3); color: #ed8936; }
-    .context-badge.http-status { background: rgba(245, 101, 101, 0.3); color: #f56565; }
-    .context-badge.log-type { background: rgba(66, 153, 225, 0.3); color: #63b3ed; }
-    .context-badge.metric-type { background: rgba(72, 187, 120, 0.3); color: #68d391; }
+    .log-level.error { color: var(--red); }
+    .log-level.warning { color: var(--orange); }
+    .log-level.info { color: var(--blue); }
+    .log-level.debug { color: var(--text-secondary); }
+    .log-level.fatal { color: var(--red); }
 
-    /* HTTP Info */
-    .log-http-info { 
-      display: flex; 
-      gap: 8px; 
-      align-items: center; 
-      margin: 4px 0; 
-      font-size: 0.75rem; 
-      flex-wrap: wrap;
-    }
-    .log-http-info .http-method { 
-      background: rgba(66, 153, 225, 0.3); 
-      color: #63b3ed; 
-      padding: 1px 6px; 
-      border-radius: 3px; 
-      font-weight: 600; 
-    }
-    .log-http-info .http-url { 
-      color: #a0aec0; 
+    .log-message { color: var(--text-primary); margin-bottom: 4px; }
+    .log-error-type { font-weight: 600; color: var(--red); font-size: 0.85rem; margin-bottom: 4px; }
+    .log-id {
       font-family: monospace;
-    }
-    .log-http-info .http-timeout { 
-      color: #ed8936; 
-      font-size: 0.7rem; 
+      background: var(--bg-hover);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.65rem;
+      color: var(--text-secondary);
     }
 
-    /* Log Attributes (for structured logs) */
-    .log-attributes { 
-      display: flex; 
-      flex-wrap: wrap; 
-      gap: 6px; 
-      margin-top: 6px; 
+    .log-stack {
+      margin-top: 8px;
+      padding: 8px;
+      background: var(--bg-primary);
+      border-radius: 6px;
       font-size: 0.7rem;
     }
-    .log-attributes .attr-item { 
-      background: rgba(255,255,255,0.1); 
-      padding: 2px 8px; 
-      border-radius: 4px; 
-      color: #a0aec0;
+
+    .stack-frame {
+      display: flex;
+      justify-content: space-between;
+      padding: 3px 0;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .stack-frame:last-child { border-bottom: none; }
+    .stack-fn { color: var(--cyan); font-weight: 500; }
+    .stack-loc { color: var(--text-muted); margin-left: 12px; }
+    .stack-more { color: var(--text-muted); font-style: italic; padding-top: 4px; }
+
+    .log-empty {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-muted);
+    }
+
+    .log-context-badges { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 6px; }
+    .context-badge {
+      font-size: 0.6rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .context-badge.error-type { background: var(--orange-dim); color: var(--orange); }
+    .context-badge.http-status { background: var(--red-dim); color: var(--red); }
+    .context-badge.log-type { background: var(--cyan-dim); color: var(--cyan); }
+    .context-badge.metric-type { background: var(--lime-glow); color: var(--lime); }
+    .context-badge.ai-type { background: var(--pink-dim); color: var(--pink); }
+
+    .log-http-info {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin: 4px 0;
+      font-size: 0.7rem;
+      flex-wrap: wrap;
+    }
+    .log-http-info .http-method {
+      background: var(--blue-dim);
+      color: var(--blue);
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+    .log-http-info .http-url { color: var(--text-muted); font-family: monospace; }
+    .log-http-info .http-timeout { color: var(--orange); font-size: 0.65rem; }
+
+    .log-attributes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+      font-size: 0.65rem;
+    }
+    .log-attributes .attr-item {
+      background: var(--bg-hover);
+      padding: 2px 8px;
+      border-radius: 4px;
+      color: var(--text-secondary);
+      font-family: monospace;
+    }
+
+    /* Breadcrumb specific */
+    .breadcrumb-category {
+      font-size: 0.65rem;
+      padding: 2px 6px;
+      background: var(--purple-dim);
+      color: var(--purple);
+      border-radius: 4px;
+      font-weight: 500;
+    }
+
+    .breadcrumb-data {
+      margin-top: 6px;
+      padding: 6px 8px;
+      background: var(--bg-primary);
+      border-radius: 4px;
+      font-size: 0.7rem;
+      color: var(--text-secondary);
       font-family: monospace;
     }
 
@@ -373,42 +632,42 @@
       position: fixed;
       top: 20px;
       right: 20px;
-      background: #2d3748;
-      color: white;
+      background: var(--bg-card);
+      color: var(--lime);
       padding: 12px 20px;
       border-radius: 8px;
-      font-size: 0.9rem;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      font-size: 0.85rem;
+      border: 1px solid var(--lime-border);
       transform: translateX(120%);
-      transition: transform 0.3s ease;
+      transition: transform 0.2s ease;
       z-index: 2000;
     }
 
     .notification.show { transform: translateX(0); }
 
-    @media (max-width: 520px) {
+    @media (max-width: 560px) {
       .log-panel { width: 100%; }
       .btn-group { flex-direction: column; }
-      .btn-group .btn { width: 100%; }
+      .btn-group .btn { width: 100%; justify-content: center; }
     }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="header">
-      <h1>Universal Logger Demo</h1>
-      <p>Complete Feature Showcase</p>
-      <p class="subtitle">Metrics | Logs | Feature Flags | Feedback | Tracing | Attachments</p>
+      <h1>Universal Logger</h1>
+      <p>Sentry-Compatible Logger Demo</p>
+      <p class="subtitle">METRICS / LOGS / FLAGS / FEEDBACK / TRACING / AI</p>
     </div>
 
     <!-- Todo App Card -->
     <div class="card">
       <h3 class="card-title">Todo List</h3>
-      <p class="card-description">A simple todo app with full event tracking. Every action is logged with breadcrumbs, metrics, and structured logs.</p>
+      <p class="card-description">Every action is tracked with breadcrumbs, metrics, and structured logs.</p>
 
       <div class="todo-input-container">
         <input type="text" class="todo-input" id="todoInput" placeholder="What needs to be done?" autofocus>
-        <button class="btn btn-primary" id="addBtn">Add Todo</button>
+        <button class="btn btn-primary" id="addBtn">Add</button>
       </div>
 
       <ul class="todo-list" id="todoList">
@@ -416,7 +675,7 @@
           <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
           </svg>
-          <p>No todos yet. Add one above!</p>
+          <p>No todos yet</p>
         </div>
       </ul>
 
@@ -431,95 +690,119 @@
         </div>
         <div class="stat">
           <div class="stat-value" id="completedCount">0</div>
-          <div class="stat-label">Completed</div>
+          <div class="stat-label">Done</div>
         </div>
       </div>
     </div>
 
-    <!-- Metrics Demo -->
-    <div class="card">
-      <h3 class="card-title">Metrics API</h3>
-      <p class="card-description">Track counters, gauges, distributions, timing, and unique sets. All metrics are aggregated and batched for efficient reporting.</p>
-      <div class="btn-group">
-        <button class="btn btn-info" id="metricsCounterBtn">Increment Counter</button>
-        <button class="btn btn-success" id="metricsGaugeBtn">Record Gauge</button>
-        <button class="btn btn-purple" id="metricsDistBtn">Distribution</button>
-        <button class="btn btn-teal" id="metricsTimingBtn">Timing</button>
-        <button class="btn btn-pink" id="metricsSetBtn">Unique Set</button>
+    <div class="card-grid">
+      <!-- Metrics Demo -->
+      <div class="card">
+        <h3 class="card-title">Metrics</h3>
+        <p class="card-description">Counters, gauges, distributions, timing, and unique sets.</p>
+        <div class="btn-group">
+          <button class="btn btn-lime" id="metricsCounterBtn">Counter</button>
+          <button class="btn btn-lime" id="metricsGaugeBtn">Gauge</button>
+          <button class="btn btn-lime" id="metricsDistBtn">Distribution</button>
+          <button class="btn btn-lime" id="metricsTimingBtn">Timing</button>
+          <button class="btn btn-lime" id="metricsSetBtn">Unique Set</button>
+        </div>
       </div>
-    </div>
 
-    <!-- Structured Logs Demo -->
-    <div class="card">
-      <h3 class="card-title">Structured Logs</h3>
-      <p class="card-description">Six log levels with searchable attributes. Logs correlate with active spans for distributed tracing.</p>
-      <div class="btn-group">
-        <button class="btn btn-gray" id="logTraceBtn">Trace</button>
-        <button class="btn btn-gray" id="logDebugBtn">Debug</button>
-        <button class="btn btn-info" id="logInfoBtn">Info</button>
-        <button class="btn btn-warning" id="logWarnBtn">Warn</button>
-        <button class="btn btn-danger" id="logErrorBtn">Error</button>
-        <button class="btn btn-danger" id="logFatalBtn">Fatal</button>
+      <!-- Structured Logs Demo -->
+      <div class="card">
+        <h3 class="card-title">Structured Logs</h3>
+        <p class="card-description">Six log levels with searchable attributes.</p>
+        <div class="btn-group">
+          <button class="btn btn-ghost" id="logTraceBtn">Trace</button>
+          <button class="btn btn-ghost" id="logDebugBtn">Debug</button>
+          <button class="btn btn-info" id="logInfoBtn">Info</button>
+          <button class="btn btn-warning" id="logWarnBtn">Warn</button>
+          <button class="btn btn-danger" id="logErrorBtn">Error</button>
+          <button class="btn btn-danger" id="logFatalBtn">Fatal</button>
+        </div>
       </div>
-    </div>
 
-    <!-- Feature Flags Demo -->
-    <div class="card">
-      <h3 class="card-title">Feature Flags</h3>
-      <p class="card-description">Track feature flag evaluations. Flag states are attached to error events for debugging feature-related issues.</p>
-      <div class="btn-group">
-        <button class="btn btn-purple" id="flagCheckBtn">Check Flag</button>
-        <button class="btn btn-teal" id="flagToggleBtn">Toggle Random Flag</button>
-        <button class="btn btn-info" id="flagListBtn">List All Flags</button>
+      <!-- Feature Flags Demo -->
+      <div class="card">
+        <h3 class="card-title">Feature Flags</h3>
+        <p class="card-description">Track evaluations for debugging.</p>
+        <div class="btn-group">
+          <button class="btn btn-purple" id="flagCheckBtn">Check Flag</button>
+          <button class="btn btn-purple" id="flagToggleBtn">Toggle Random</button>
+          <button class="btn btn-purple" id="flagListBtn">List All</button>
+        </div>
       </div>
-    </div>
 
-    <!-- Attachments Demo -->
-    <div class="card">
-      <h3 class="card-title">Attachments</h3>
-      <p class="card-description">Attach files to error events for rich debugging context. Supports text, JSON, and binary data.</p>
-      <div class="btn-group">
-        <button class="btn btn-info" id="attachTextBtn">Attach Text</button>
-        <button class="btn btn-success" id="attachJsonBtn">Attach JSON</button>
-        <button class="btn btn-purple" id="attachBinaryBtn">Attach Binary</button>
+      <!-- Attachments Demo -->
+      <div class="card">
+        <h3 class="card-title">Attachments</h3>
+        <p class="card-description">Attach files to error events.</p>
+        <div class="btn-group">
+          <button class="btn btn-cyan" id="attachTextBtn">Text</button>
+          <button class="btn btn-cyan" id="attachJsonBtn">JSON</button>
+          <button class="btn btn-cyan" id="attachBinaryBtn">Binary</button>
+        </div>
       </div>
-    </div>
 
-    <!-- Tracing Demo -->
-    <div class="card">
-      <h3 class="card-title">Distributed Tracing</h3>
-      <p class="card-description">Create spans to track operations. Spans propagate trace context across services via headers.</p>
-      <div class="btn-group">
-        <button class="btn btn-teal" id="tracingSimpleBtn">Simple Span</button>
-        <button class="btn btn-purple" id="tracingNestedBtn">Nested Spans</button>
-        <button class="btn btn-info" id="tracingManualBtn">Manual Span</button>
+      <!-- Tracing Demo -->
+      <div class="card">
+        <h3 class="card-title">Distributed Tracing</h3>
+        <p class="card-description">Create spans to track operations.</p>
+        <div class="btn-group">
+          <button class="btn btn-info" id="tracingSimpleBtn">Simple</button>
+          <button class="btn btn-info" id="tracingNestedBtn">Nested</button>
+          <button class="btn btn-info" id="tracingManualBtn">Manual</button>
+        </div>
       </div>
-    </div>
 
-    <!-- Feedback Demo -->
-    <div class="card">
-      <h3 class="card-title">User Feedback</h3>
-      <p class="card-description">Collect user feedback with optional screenshots. Feedback can be associated with error events.</p>
-      <div class="btn-group">
-        <button class="btn btn-success" id="feedbackDialogBtn">Open Feedback Dialog</button>
+      <!-- AI Monitoring Demo -->
+      <div class="card">
+        <h3 class="card-title">AI Monitoring</h3>
+        <p class="card-description">Track LLM calls and AI pipelines.</p>
+        <div class="btn-group">
+          <button class="btn btn-pink" id="aiChatBtn">Chat</button>
+          <button class="btn btn-pink" id="aiCompletionBtn">Completion</button>
+          <button class="btn btn-pink" id="aiPipelineBtn">Pipeline</button>
+        </div>
       </div>
-      <p style="margin-top: 12px; font-size: 0.85rem; color: #718096;">Also check the floating feedback button on the left!</p>
+
+      <!-- Scope/Context Demo -->
+      <div class="card">
+        <h3 class="card-title">Scope & Context</h3>
+        <p class="card-description">Manage user and custom context.</p>
+        <div class="btn-group">
+          <button class="btn btn-ghost" id="scopeUserBtn">Set User</button>
+          <button class="btn btn-ghost" id="scopeTagBtn">Add Tag</button>
+          <button class="btn btn-ghost" id="scopeContextBtn">Set Context</button>
+          <button class="btn btn-ghost" id="scopeClearBtn">Clear</button>
+        </div>
+      </div>
+
+      <!-- Feedback Demo -->
+      <div class="card">
+        <h3 class="card-title">User Feedback</h3>
+        <p class="card-description">Collect feedback with screenshots.</p>
+        <div class="btn-group">
+          <button class="btn btn-primary" id="feedbackDialogBtn">Open Dialog</button>
+        </div>
+      </div>
     </div>
 
     <!-- Error Testing -->
     <div class="card">
       <h3 class="card-title">Error Testing</h3>
-      <p class="card-description">Trigger various error types to see them captured with full stack traces, breadcrumbs, and context.</p>
+      <p class="card-description">Trigger errors to see them captured with full context.</p>
       <div class="section-divider">JavaScript Errors</div>
       <div class="btn-group" style="margin-bottom: 16px;">
-        <button class="btn btn-danger" id="throwErrorBtn">Throw Error</button>
+        <button class="btn btn-danger" id="throwErrorBtn">Error</button>
         <button class="btn btn-danger" id="throwTypeErrorBtn">TypeError</button>
-        <button class="btn btn-danger" id="undefinedErrorBtn">Undefined Access</button>
+        <button class="btn btn-danger" id="undefinedErrorBtn">Undefined</button>
       </div>
       <div class="section-divider">HTTP Errors</div>
       <div class="btn-group">
-        <button class="btn btn-warning" id="badHttpBtn">500 Error</button>
-        <button class="btn btn-warning" id="notFoundBtn">404 Not Found</button>
+        <button class="btn btn-warning" id="badHttpBtn">500</button>
+        <button class="btn btn-warning" id="notFoundBtn">404</button>
         <button class="btn btn-warning" id="timeoutBtn">Timeout</button>
       </div>
     </div>
@@ -527,7 +810,7 @@
 
   <!-- Floating Action Button -->
   <button class="fab" id="logToggleBtn" title="Toggle Event Log">
-    <span class="fab-icon">Log</span>
+    LOG
     <span class="fab-badge hidden" id="errorBadge">0</span>
   </button>
 
@@ -540,12 +823,19 @@
       <div class="log-viewer-header">
         <div class="log-viewer-title">Event Log</div>
         <div class="log-viewer-actions">
-          <button class="btn btn-icon" id="refreshLogsBtn">Refresh</button>
-          <button class="btn btn-icon" id="clearLogsBtn">Clear</button>
+          <button class="btn btn-ghost btn-small" id="refreshLogsBtn">Refresh</button>
+          <button class="btn btn-ghost btn-small" id="clearLogsBtn">Clear</button>
         </div>
       </div>
+      <div class="log-tabs">
+        <button class="log-tab active" data-tab="all">All</button>
+        <button class="log-tab" data-tab="errors">Errors</button>
+        <button class="log-tab" data-tab="logs">Logs</button>
+        <button class="log-tab" data-tab="metrics">Metrics</button>
+        <button class="log-tab" data-tab="breadcrumbs">Breadcrumbs</button>
+      </div>
       <div id="logContainer">
-        <div class="log-empty">No events captured yet. Interact with the app!</div>
+        <div class="log-empty">No events yet. Interact with the app!</div>
       </div>
     </div>
   </div>
