@@ -77,9 +77,23 @@
   },
   "keywords": [
     "sentry",
+    "sentry-sdk",
     "logger",
+    "logging",
     "debugging",
     "error-tracking",
-    "tracing"
+    "error-monitoring",
+    "tracing",
+    "distributed-tracing",
+    "breadcrumbs",
+    "observability",
+    "monitoring",
+    "react",
+    "typescript",
+    "browser",
+    "frontend",
+    "metrics",
+    "structured-logging",
+    "opentelemetry"
   ]
 }
