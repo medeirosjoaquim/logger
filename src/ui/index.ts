@@ -40,6 +40,17 @@ export { StackTrace } from './components/StackTrace.js';
 export { JsonViewer, RawJson } from './components/JsonViewer.js';
 export { ExportButton, ExportDropdown } from './components/Export.js';
 
+// Error Boundary (Sentry-compatible)
+export {
+  ErrorBoundary,
+  withErrorBoundary,
+  type ErrorBoundaryProps,
+  type FallbackProps,
+  type FallbackRender,
+  type FallbackElement,
+  type WithErrorBoundaryOptions,
+} from './components/ErrorBoundary.js';
+
 // Tab components (for building custom panels)
 export { EventsTab } from './tabs/EventsTab.js';
 export { TracesTab } from './tabs/TracesTab.js';

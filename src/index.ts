@@ -432,6 +432,19 @@ export {
 } from './core/feedback';
 
 // ============================================
+// React Error Boundary (Sentry-compatible)
+// ============================================
+export {
+  ErrorBoundary,
+  withErrorBoundary,
+  type ErrorBoundaryProps,
+  type FallbackProps,
+  type FallbackRender,
+  type FallbackElement,
+  type WithErrorBoundaryOptions,
+} from './ui/components/ErrorBoundary';
+
+// ============================================
 // Production Helper Utilities
 // ============================================
 export {
@@ -781,6 +794,7 @@ export type {
 // Default export
 // ============================================
 import { aiMonitoring } from './ai';
+import { ErrorBoundary, withErrorBoundary } from './ui/components/ErrorBoundary';
 
 export default {
   init,
@@ -818,4 +832,7 @@ export default {
   metrics,
   // AI Agent Monitoring
   ai: aiMonitoring,
+  // React Error Boundary
+  ErrorBoundary,
+  withErrorBoundary,
 };

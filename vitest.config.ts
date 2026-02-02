@@ -12,7 +12,7 @@ export default defineConfig({
     setupFiles: ['./src/__tests__/setup.ts'],
 
     // Test file patterns to include
-    include: ['src/__tests__/**/*.test.ts'],
+    include: ['src/__tests__/**/*.test.ts', 'src/__tests__/**/*.test.tsx'],
 
     // Files/directories to exclude
     exclude: [
