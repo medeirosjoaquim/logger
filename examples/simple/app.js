@@ -10,6 +10,11 @@ import * as Sentry from '@universal-logger/core';
 import {
   getLocalLogs,
   clearLocalData,
+  // Factory Pattern - Named Loggers
+  createLogger,
+  getNamedLogger,
+  destroyLogger,
+  listLoggers,
   metrics,
   getMetrics,
   logger,
@@ -48,6 +53,41 @@ Sentry.setContext('app_info', {
 });
 
 console.log('[App] Universal Logger initialized');
+
+// ============================================
+// Factory Pattern Demo - Named Loggers
+// ============================================
+
+// Create separate loggers for different modules
+const authLogger = createLogger('auth', {
+  storage: 'memory',
+  environment: 'development',
+  maxBreadcrumbs: 50,
+  initialScope: {
+    tags: { module: 'authentication' },
+  },
+});
+
+const apiLogger = createLogger('api', {
+  storage: 'indexeddb',
+  environment: 'development',
+  maxBreadcrumbs: 100,
+  initialScope: {
+    tags: { module: 'api-client' },
+  },
+});
+
+// Use named loggers just like regular Sentry
+authLogger.setTag('auth.provider', 'oauth');
+apiLogger.setTag('api.endpoint', '/users');
+
+console.log('[Factory] Created named loggers:', listLoggers());
+console.log('[Factory] Auth logger name:', authLogger.getName());
+console.log('[Factory] API logger name:', apiLogger.getName());
+
+// Retrieve existing logger
+const sameAuthLogger = getNamedLogger('auth');
+console.log('[Factory] Retrieved auth logger:', sameAuthLogger?.getName());
 
 // ============================================
 // Feature Flags
@@ -370,6 +410,80 @@ document.getElementById('timeoutBtn').addEventListener('click', async () => {
       contexts: { http: { url, method: 'GET', timeout_ms: 1000 } }
     });
   }
+});
+
+// ============================================
+// Factory Pattern - Named Loggers Demo
+// ============================================
+
+const factoryStatus = document.getElementById('factoryStatus');
+
+function updateFactoryStatus() {
+  const names = listLoggers();
+  factoryStatus.innerHTML = `<strong>Active Loggers:</strong> ${names.length > 0 ? names.join(', ') : 'None'}<br><em>Check console for detailed output</em>`;
+}
+
+// Initial status
+updateFactoryStatus();
+
+document.getElementById('authLoggerBtn').addEventListener('click', () => {
+  // Use the auth logger (created in initialization)
+  const authLogger = getNamedLogger('auth');
+  if (authLogger) {
+    authLogger.captureMessage('Auth event captured', 'info');
+    authLogger.setTag('auth.event', 'login_attempt');
+    logger.info('Used auth logger (memory storage)');
+    showNotification('Auth logger: message captured');
+  } else {
+    showNotification('Auth logger not found - create it first!');
+  }
+  updateFactoryStatus();
+});
+
+document.getElementById('apiLoggerBtn').addEventListener('click', () => {
+  // Use the api logger (created in initialization)
+  const apiLogger = getNamedLogger('api');
+  if (apiLogger) {
+    apiLogger.captureMessage('API event captured', 'info');
+    apiLogger.setTag('api.event', 'request');
+    logger.info('Used api logger (indexeddb storage)');
+    showNotification('API logger: message captured');
+  } else {
+    showNotification('API logger not found - create it first!');
+  }
+  updateFactoryStatus();
+});
+
+document.getElementById('listLoggersBtn').addEventListener('click', () => {
+  const names = listLoggers();
+  console.log('[Factory] Active named loggers:', names);
+  updateFactoryStatus();
+  showNotification(`Active loggers: ${names.join(', ') || 'None'}`);
+});
+
+document.getElementById('destroyAuthBtn').addEventListener('click', () => {
+  destroyLogger('auth');
+  updateFactoryStatus();
+  showNotification('Auth logger destroyed');
+});
+
+document.getElementById('destroyAllBtn').addEventListener('click', () => {
+  destroyAllLoggers();
+  // Recreate the default loggers for demo
+  setTimeout(() => {
+    createLogger('auth', {
+      storage: 'memory',
+      environment: 'development',
+      initialScope: { tags: { module: 'authentication' } },
+    });
+    createLogger('api', {
+      storage: 'indexeddb',
+      environment: 'development',
+      initialScope: { tags: { module: 'api-client' } },
+    });
+    updateFactoryStatus();
+  }, 100);
+  showNotification('All loggers destroyed & recreated');
 });
 
 // ============================================

@@ -806,6 +806,24 @@
         <button class="btn btn-warning" id="timeoutBtn">Timeout</button>
       </div>
     </div>
+
+    <!-- Factory Pattern - Named Loggers -->
+    <div class="card">
+      <h3 class="card-title">Factory Pattern - Named Loggers</h3>
+      <p class="card-description">Create multiple isolated logger instances with different storage providers. Each logger works like Sentry.</p>
+      <div class="section-divider">Named Logger Instances</div>
+      <div class="btn-group" style="margin-bottom: 16px;">
+        <button class="btn btn-purple" id="authLoggerBtn">Auth Logger (memory)</button>
+        <button class="btn btn-cyan" id="apiLoggerBtn">API Logger (indexeddb)</button>
+      </div>
+      <div class="section-divider">Factory Management</div>
+      <div class="btn-group">
+        <button class="btn btn-gray" id="listLoggersBtn">List Loggers</button>
+        <button class="btn btn-gray" id="destroyAuthBtn">Destroy Auth</button>
+        <button class="btn btn-danger" id="destroyAllBtn">Destroy All</button>
+      </div>
+      <div id="factoryStatus" style="margin-top: 12px; padding: 10px; background: var(--bg-tertiary); border-radius: 8px; font-size: 0.85rem; color: var(--text-secondary);"></div>
+    </div>
   </div>
 
   <!-- Floating Action Button -->
