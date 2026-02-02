@@ -110,6 +110,10 @@ export function getGlobalScope(): ScopeType {
   return logger.getGlobalScope();
 }
 
+export function configureScope(callback: (scope: ScopeType) => void): void {
+  callback(logger.getCurrentScope());
+}
+
 // Lifecycle
 export function flush(timeout?: number): Promise<boolean> {
   return logger.flush(timeout);
@@ -403,6 +407,17 @@ export {
   type ReportDialogOptions,
   type FeedbackWidgetOptions,
 } from './core/feedback';
+
+// ============================================
+// Production Helper Utilities
+// ============================================
+export {
+  helpers,
+  sentry,
+  type CaptureErrorOptions,
+  type TrackEventOptions,
+  type IdentifyUserOptions,
+} from './core/helpers';
 
 // ============================================
 // Local Logger Extensions (not in Sentry)
@@ -760,6 +775,7 @@ export default {
   clearAttachments,
   withScope,
   withIsolationScope,
+  configureScope,
   getCurrentScope,
   getIsolationScope,
   getGlobalScope,
