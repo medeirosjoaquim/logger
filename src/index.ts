@@ -13,12 +13,35 @@
 // ============================================
 // Core Logger
 // ============================================
-export { UniversalLogger, type UniversalLoggerConfig } from './core/logger';
+export { UniversalLogger, type UniversalLoggerConfig, type NamedLoggerOptions } from './core/logger';
 
 // ============================================
 // Singleton API (Sentry-compatible)
 // ============================================
 import { UniversalLogger } from './core/logger';
+
+// ============================================
+// Factory API (Named Instances)
+// ============================================
+export function createLogger(name: string, options?: import('./core/logger').NamedLoggerOptions): UniversalLogger {
+  return UniversalLogger.create(name, options);
+}
+
+export function getNamedLogger(name: string): UniversalLogger | undefined {
+  return UniversalLogger.get(name);
+}
+
+export function destroyLogger(name: string): boolean {
+  return UniversalLogger.destroy(name);
+}
+
+export function destroyAllLoggers(): void {
+  UniversalLogger.destroyAll();
+}
+
+export function listLoggers(): string[] {
+  return UniversalLogger.listNames();
+}
 
 const logger = UniversalLogger.getInstance();
 

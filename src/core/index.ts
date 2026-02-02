@@ -12,6 +12,7 @@
 export {
   UniversalLogger,
   type UniversalLoggerConfig,
+  type NamedLoggerOptions,
 } from './logger.js';
 
 // ============================================

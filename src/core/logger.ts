@@ -44,14 +44,46 @@ export interface UniversalLoggerConfig {
 }
 
 /**
+ * Options for creating a named logger instance
+ */
+export interface NamedLoggerOptions {
+  /** Storage provider type or instance */
+  storage?: 'memory' | 'indexeddb' | StorageProvider;
+  /** Sentry DSN for proxy mode */
+  dsn?: string;
+  /** Maximum breadcrumbs to keep */
+  maxBreadcrumbs?: number;
+  /** Sample rate for events (0-1) */
+  sampleRate?: number;
+  /** Before send callback */
+  beforeSend?: (event: Event) => Event | null;
+  /** Environment name */
+  environment?: string;
+  /** Release version */
+  release?: string;
+  /** Debug mode */
+  debug?: boolean;
+  /** Initial scope data */
+  initialScope?: {
+    tags?: Record<string, string>;
+    user?: User;
+    context?: Record<string, unknown>;
+  };
+}
+
+/**
  * Universal Logger class
  *
  * Provides a Sentry-compatible logging interface with local storage support.
  * Can operate in standalone mode (local only), proxy mode (forward to Sentry),
  * or hybrid mode (local storage + Sentry forwarding).
+ * 
+ * Supports both singleton pattern (backward compatible) and factory pattern
+ * for creating multiple named logger instances.
  */
 export class UniversalLogger {
   private static _instance: UniversalLogger | undefined;
+  private static _namedInstances: Map<string, UniversalLogger> = new Map();
 
   private _initialized = false;
   private _enabled = true;
@@ -61,19 +93,148 @@ export class UniversalLogger {
   private _integrations: Integration[] = [];
   private _lastEventId: string | undefined;
   private _client: Client | undefined;
+  private _name?: string;  // Name for factory-created instances
 
-  private constructor() {
+  private constructor(name?: string) {
+    this._name = name;
     this._scopeManager = getDefaultScopeManager();
   }
 
   /**
-   * Get the singleton instance
+   * Get the singleton instance (backward compatible)
    */
   static getInstance(): UniversalLogger {
     if (!UniversalLogger._instance) {
       UniversalLogger._instance = new UniversalLogger();
     }
     return UniversalLogger._instance;
+  }
+
+  /**
+   * Create a named logger instance (factory pattern)
+   * 
+   * @param name - Unique name for this logger instance
+   * @param options - Configuration options
+   * @returns Named logger instance
+   * 
+   * @example
+   * ```typescript
+   * const authLogger = UniversalLogger.create('auth', { storage: 'memory' });
+   * const apiLogger = UniversalLogger.create('api', { storage: 'indexeddb', dsn: '...' });
+   * 
+   * authLogger.captureException(error);
+   * apiLogger.captureMessage('API called');
+   * ```
+   */
+  static create(name: string, options: NamedLoggerOptions = {}): UniversalLogger {
+    // Return existing instance if already created
+    if (UniversalLogger._namedInstances.has(name)) {
+      console.warn(`Logger '${name}' already exists. Returning existing instance.`);
+      return UniversalLogger._namedInstances.get(name)!;
+    }
+
+    // Create new named instance
+    const logger = new UniversalLogger(name);
+    
+    // Initialize with options
+    const initOptions: InitOptions = {
+      dsn: options.dsn,
+      enabled: true,
+      environment: options.environment,
+      release: options.release,
+      debug: options.debug,
+      sampleRate: options.sampleRate,
+      beforeSend: options.beforeSend,
+      maxBreadcrumbs: options.maxBreadcrumbs,
+      _experiments: {
+        storage: options.storage || 'memory',
+      },
+      initialScope: options.initialScope,
+    };
+
+    logger.init(initOptions);
+    
+    // Store in registry
+    UniversalLogger._namedInstances.set(name, logger);
+    
+    return logger;
+  }
+
+  /**
+   * Get a named logger instance by name
+   * 
+   * @param name - Name of the logger instance
+   * @returns The named logger instance, or undefined if not found
+   * 
+   * @example
+   * ```typescript
+   * const authLogger = UniversalLogger.get('auth');
+   * if (authLogger) {
+   *   authLogger.captureException(error);
+   * }
+   * ```
+   */
+  static get(name: string): UniversalLogger | undefined {
+    return UniversalLogger._namedInstances.get(name);
+  }
+
+  /**
+   * Destroy a named logger instance
+   * 
+   * @param name - Name of the logger instance to destroy
+   * @returns true if destroyed, false if not found
+   * 
+   * @example
+   * ```typescript
+   * UniversalLogger.destroy('auth');
+   * ```
+   */
+  static destroy(name: string): boolean {
+    const logger = UniversalLogger._namedInstances.get(name);
+    if (logger) {
+      logger.close();
+      UniversalLogger._namedInstances.delete(name);
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Destroy all named logger instances
+   * 
+   * @example
+   * ```typescript
+   * UniversalLogger.destroyAll();
+   * ```
+   */
+  static destroyAll(): void {
+    for (const [name, logger] of UniversalLogger._namedInstances) {
+      logger.close();
+    }
+    UniversalLogger._namedInstances.clear();
+  }
+
+  /**
+   * List all named logger instance names
+   * 
+   * @returns Array of logger names
+   */
+  static listNames(): string[] {
+    return Array.from(UniversalLogger._namedInstances.keys());
+  }
+
+  /**
+   * Get the name of this logger instance (for factory-created instances)
+   */
+  getName(): string | undefined {
+    return this._name;
+  }
+
+  /**
+   * Check if this is a named (factory-created) instance
+   */
+  isNamedInstance(): boolean {
+    return this._name !== undefined;
   }
 
   /**
