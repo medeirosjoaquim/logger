@@ -856,8 +856,9 @@ export interface Attachment {
 
   /**
    * The attachment data.
+   * Can be a string (for text), Uint8Array (for binary), or Blob (for browser files).
    */
-  data: string | Uint8Array;
+  data: string | Uint8Array | Blob;
 
   /**
    * MIME type of the attachment.
@@ -867,7 +868,7 @@ export interface Attachment {
   /**
    * Type of attachment.
    */
-  attachmentType?: 'event.attachment' | 'event.minidump' | 'event.applecrashreport' | 'unreal.context' | 'unreal.logs';
+  attachmentType?: 'event.attachment' | 'event.minidump' | 'event.applecrashreport' | 'event.view_hierarchy' | 'unreal.context' | 'unreal.logs';
 }
 
 /**

@@ -1,69 +1,154 @@
-# Simple Todo App - Universal Sentry Logger Demo
+# Universal Logger - Complete Feature Demo
 
-A simple todo list application demonstrating the Universal Sentry-Compatible Logger. This example shows how to use the logger as a drop-in replacement for Sentry.
+A comprehensive demo showcasing all features of the Universal Sentry-Compatible Logger.
 
-## Features
+## Features Demonstrated
 
-- **Drop-in Sentry Replacement**: Import the logger as `Sentry` and use the exact same API
-- **Local Event Storage**: All events are stored locally (no actual Sentry server needed)
-- **Error Tracking**: Capture exceptions, messages, and breadcrumbs
-- **Debug Panel**: View all logged events in real-time (when React UI is added)
-- **HTTP Error Logging**: Demonstrate logging of failed HTTP requests
+### Core Features (Sentry-Compatible)
+- **Error Tracking** - Capture exceptions with full stack traces
+- **Breadcrumbs** - Automatic and manual breadcrumb tracking
+- **Scope Management** - Tags, user info, contexts, and extras
+- **Event Processing** - beforeSend hooks and sampling
 
-## What's Demonstrated
+### New Features
+- **Metrics API** - Counters, gauges, distributions, timing, unique sets
+- **Structured Logs** - Six log levels with searchable attributes
+- **Feature Flags** - Track flag evaluations for debugging
+- **User Feedback** - Embeddable widget and modal dialog
+- **Attachments** - Attach files to error events
+- **Distributed Tracing** - Spans with context propagation
+- **AI Monitoring** - Instrument AI client calls (OpenAI, Anthropic)
 
-1. **Basic Integration**: Initialize the logger with Sentry-compatible API
-2. **Exception Capture**: Multiple error scenarios (TypeError, undefined access, etc.)
-3. **Message Logging**: Log custom messages with severity levels
-4. **Breadcrumbs**: Automatic tracking of user actions
-5. **Context & Tags**: Enrich events with additional metadata
-6. **HTTP Error Handling**: Capture failed API requests
-
-## Running the Example
-
-### Prerequisites
-
-Make sure the Universal Logger is built:
+## Running the Demo
 
 ```bash
-# From the root of the logger project
-cd ../..
+# From the examples/simple directory
 npm install
-npm run build
-```
-
-### Start the Example
-
-```bash
-# From this directory (examples/simple)
 npm run dev
+
+# Or from the root directory
+npm run example:simple
 ```
 
-This will start a local server at `http://localhost:3000` and open it in your browser.
+Opens at http://localhost:3000
 
-Alternatively, you can use any static file server:
+## Demo Sections
 
-```bash
-# Using Python
-python -m http.server 3000
+### Todo List
+A simple todo app demonstrating:
+- Breadcrumb tracking for user actions
+- Metrics for todo counts (gauge, counter)
+- Structured logs for state changes
+- Span tracing for operations
 
-# Using Node's http-server
-npx http-server -p 3000
+### Metrics API
+```javascript
+metrics.increment('page.views');           // Counter
+metrics.gauge('memory.used', 512);         // Current value
+metrics.distribution('response.time', 150); // Histogram
+metrics.timing('api.call', duration);       // Duration
+metrics.set('unique.users', 'user123');    // Unique tracking
 ```
 
-## How It Works
+### Structured Logs
+```javascript
+logger.trace('Detailed debug info');
+logger.debug('Debugging information');
+logger.info('User action', { userId: '123' });
+logger.warn('Warning condition');
+logger.error('Error occurred', { code: 500 });
+logger.fatal('Critical failure');
+```
 
-### 1. Import as Sentry
+### Feature Flags
+```javascript
+addFeatureFlagEvaluation('dark-mode', true);
+addFeatureFlagEvaluation('beta-features', false);
+const flags = getFeatureFlags(); // { 'dark-mode': true, ... }
+```
+
+### Attachments
+```javascript
+addAttachment({
+  filename: 'debug.txt',
+  data: 'Debug info here',
+  contentType: 'text/plain',
+});
+
+addAttachment({
+  filename: 'state.json',
+  data: JSON.stringify(appState),
+  contentType: 'application/json',
+});
+```
+
+### Distributed Tracing
+```javascript
+// Automatic span management
+startSpan({ name: 'api-call', op: 'http' }, async () => {
+  await fetch('/api/data');
+});
+
+// Nested spans
+startSpan({ name: 'parent' }, () => {
+  startSpan({ name: 'child' }, () => {
+    // Child operation
+  });
+});
+
+// Manual control
+const span = startInactiveSpan({ name: 'manual' });
+span.setAttribute('key', 'value');
+span.end();
+```
+
+### User Feedback
+```javascript
+// Open feedback dialog
+showReportDialog({
+  title: 'Report an Issue',
+  enableScreenshot: true,
+  onSubmit: (feedback) => console.log(feedback),
+});
+
+// Create floating widget
+createFeedbackWidgetButton({
+  position: 'bottom-right',
+  triggerLabel: 'Feedback',
+});
+```
+
+### Error Testing
+Test various error scenarios:
+- Generic errors
+- TypeErrors
+- Undefined access
+- HTTP 500/404 errors
+- Request timeouts
+
+## Event Log Panel
+
+Click the "Log" button in the bottom-right corner to view:
+- All captured events in real-time
+- Error count badge
+- Stack traces for exceptions
+- Event IDs for correlation
+
+## Complete Integration Example
 
 ```javascript
-import * as Sentry from '../../dist/index.js';
-```
+import * as Sentry from '@universal-logger/core';
+import {
+  metrics,
+  logger,
+  addFeatureFlagEvaluation,
+  addAttachment,
+  startSpan,
+  showReportDialog,
+  featureFlagsIntegration,
+} from '@universal-logger/core';
 
-The logger is imported as `Sentry` to demonstrate it's a drop-in replacement for the actual Sentry SDK.
-
-### 2. Initialize
-
-```javascript
+// Initialize with all features
 Sentry.init({
   debug: true,
   environment: 'development',
@@ -71,98 +156,58 @@ Sentry.init({
   maxBreadcrumbs: 50,
   attachStacktrace: true,
   initialScope: {
-    tags: { app: 'todo-demo' },
-    user: { username: 'demo-user' },
+    tags: { app: 'my-app' },
+    user: { id: '123', email: 'user@example.com' },
   },
+  integrations: [
+    featureFlagsIntegration({ maxEvaluations: 100 }),
+  ],
 });
-```
 
-### 3. Capture Events
+// Set context
+Sentry.setTag('component', 'checkout');
+Sentry.setContext('cart', { items: 3, total: 99.99 });
 
-**Exceptions:**
-```javascript
-try {
-  throw new Error('Something went wrong!');
-} catch (error) {
-  Sentry.captureException(error, {
-    tags: { errorType: 'intentional' },
-    extra: { additionalInfo: 'value' },
+// Track feature flags
+addFeatureFlagEvaluation('new-checkout', true);
+
+// Log with structure
+logger.info('Checkout started', { cartId: 'abc123' });
+
+// Track metrics
+metrics.increment('checkout.started');
+
+// Wrap operations in spans
+await startSpan({ name: 'process-checkout', op: 'task' }, async () => {
+  // Attach debug info
+  addAttachment({
+    filename: 'cart.json',
+    data: JSON.stringify(cart),
   });
-}
-```
 
-**Messages:**
-```javascript
-Sentry.captureMessage('Todo created', 'info');
-```
+  try {
+    await processPayment();
+    metrics.increment('checkout.success');
+  } catch (error) {
+    metrics.increment('checkout.failed');
+    Sentry.captureException(error);
 
-**Breadcrumbs:**
-```javascript
-Sentry.addBreadcrumb({
-  category: 'todo',
-  message: 'Added todo: Buy milk',
-  level: 'info',
-  data: { todoId: 123 },
+    // Show feedback dialog
+    showReportDialog({
+      eventId: Sentry.lastEventId(),
+      title: 'Checkout Failed',
+    });
+  }
 });
 ```
-
-### 4. View Logs
-
-Open your browser's console to see:
-- Initialization logs
-- Captured events
-- Breadcrumb trail
-- Error details
-
-All events are stored locally in memory (by default) and can be retrieved:
-
-```javascript
-// In browser console
-import { getLocalLogs } from '../../dist/index.js';
-console.log(await getLocalLogs());
-```
-
-## Error Test Buttons
-
-The app includes several buttons to trigger different error scenarios:
-
-1. **Throw Error**: Basic Error object
-2. **Throw TypeError**: Type error from null access
-3. **Undefined Error**: Access undefined property
-4. **Bad HTTP Request**: 500 server error
-5. **404 Request**: Not found error
-6. **Timeout Request**: Request timeout/abort
-
-Click these buttons to see how the logger captures different error types!
-
-## Storage Options
-
-The example uses memory storage by default. You can switch to IndexedDB for persistence:
-
-```javascript
-Sentry.init({
-  // ... other options
-  _experiments: {
-    storage: 'indexeddb', // Use IndexedDB instead of memory
-  },
-});
-```
-
-## Next Steps
-
-1. **Add React Debug UI**: Import and use the DebugPanel component
-2. **Try Different Storage**: Switch between memory, IndexedDB
-3. **Enable Proxy Mode**: Forward events to actual Sentry
-4. **Explore Tracing**: Add spans and transactions
 
 ## Files
 
-- `index.html` - The main HTML file with todo app UI
-- `app.js` - Application logic with Sentry integration
-- `package.json` - Dev server configuration
-- `README.md` - This file
-
-## Learn More
-
-- [Universal Logger Documentation](../../README.md)
-- [Sentry JavaScript SDK](https://docs.sentry.io/platforms/javascript/)
+```
+examples/simple/
+├── index.html      # Main HTML with feature demo UI
+├── app.js          # Application logic demonstrating all features
+├── package.json    # Dependencies
+├── vite.config.js  # Vite dev server configuration
+└── README.md       # This file
+```

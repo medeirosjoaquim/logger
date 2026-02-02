@@ -211,19 +211,22 @@ export class UniversalLogger {
 
   /**
    * Capture an exception
+   *
+   * Sentry-compatible signature: captureException(exception, captureContext?)
+   * where captureContext can include tags, extra, contexts, user, level, fingerprint
    */
-  captureException(exception: unknown, hint?: EventHint): string {
+  captureException(exception: unknown, captureContext?: CaptureContext): string {
     if (!this.isEnabled()) {
       return '';
     }
 
     const { eventId, event } = buildException(exception, {
-      hint,
+      captureContext,
       attachStacktrace: this._options.attachStacktrace,
     });
 
     this._lastEventId = eventId;
-    this._processEvent(event, hint);
+    this._processEvent(event);
 
     return eventId;
   }
@@ -331,6 +334,41 @@ export class UniversalLogger {
     }
 
     this.getCurrentScope().addBreadcrumb(finalBreadcrumb, this._options.maxBreadcrumbs);
+  }
+
+  // ============================================
+  // Attachments
+  // ============================================
+
+  /**
+   * Add an attachment to the current scope
+   */
+  addAttachment(attachment: {
+    filename: string;
+    data: string | Uint8Array | Blob;
+    contentType?: string;
+    attachmentType?: 'event.attachment' | 'event.minidump' | 'event.applecrashreport' | 'event.view_hierarchy' | 'unreal.context' | 'unreal.logs';
+  }): void {
+    this.getCurrentScope().addAttachment({
+      filename: attachment.filename,
+      data: attachment.data,
+      contentType: attachment.contentType,
+      attachmentType: attachment.attachmentType,
+    });
+  }
+
+  /**
+   * Clear all attachments from the current scope
+   */
+  clearAttachments(): void {
+    this.getCurrentScope().clearAttachments();
+  }
+
+  /**
+   * Get attachments from the current scope
+   */
+  getAttachments(): { filename: string; data: string | Uint8Array | Blob; contentType?: string; attachmentType?: string }[] {
+    return this.getCurrentScope().getAttachments();
   }
 
   // ============================================
@@ -469,22 +507,42 @@ export class UniversalLogger {
       return;
     }
 
+    // Collect attachments from scope and event hint
+    const scopeAttachments = scope.getAttachments();
+    const hintAttachments = hint?.attachments || [];
+
+    // Merge attachments into the event hint for beforeSend to access/filter
+    const eventHint: EventHint = {
+      ...hint,
+      attachments: [...scopeAttachments, ...hintAttachments],
+    };
+
     // Apply beforeSend callback
+    let finalEvent = processedEvent;
     if (this._options.beforeSend) {
-      const result = await this._options.beforeSend(processedEvent, hint || {});
+      const result = await this._options.beforeSend(finalEvent, eventHint);
       if (!result) {
+        // Event was dropped, clear attachments and return
+        scope.clearAttachments();
         return;
       }
+      finalEvent = result;
     }
 
-    // Store locally
-    await this._storeEvent(processedEvent);
+    // Store locally with attachments
+    await this._storeEvent(finalEvent, eventHint.attachments);
+
+    // Clear attachments from scope after sending
+    scope.clearAttachments();
   }
 
   /**
    * Store an event in local storage
    */
-  private async _storeEvent(event: Event): Promise<void> {
+  private async _storeEvent(
+    event: Event,
+    attachments?: Array<{ filename: string; data: string | Uint8Array | Blob; contentType?: string; attachmentType?: string }>
+  ): Promise<void> {
     if (!this._storage) {
       return;
     }
@@ -513,6 +571,19 @@ export class UniversalLogger {
       sdk: event.sdk as SentryEvent['sdk'],
     };
 
+    // Add attachments metadata to the stored event if present
+    if (attachments && attachments.length > 0) {
+      // Store attachment metadata in the event for reference
+      // The actual attachment data would be sent via transport layer
+      (sentryEvent as SentryEvent & { _attachments?: typeof attachments })._attachments = attachments.map(att => ({
+        filename: att.filename,
+        contentType: att.contentType || 'application/octet-stream',
+        attachmentType: att.attachmentType || 'event.attachment',
+        // Store data size instead of full data for metadata
+        data: att.data,
+      }));
+    }
+
     await this._storage.saveSentryEvent(sentryEvent);
 
     // Also store as a log entry for easier querying
@@ -538,6 +609,15 @@ export class UniversalLogger {
 
     if (event.exception?.values?.[0]) {
       logEntry.exception = event.exception.values[0];
+    }
+
+    // Add attachment count to log entry for reference
+    if (attachments && attachments.length > 0) {
+      logEntry.extra = {
+        ...logEntry.extra,
+        _attachmentCount: attachments.length,
+        _attachmentFilenames: attachments.map(a => a.filename),
+      };
     }
 
     await this._storage.saveLog(logEntry);

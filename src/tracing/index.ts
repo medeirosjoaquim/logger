@@ -136,6 +136,52 @@ export {
 } from './propagation.js';
 
 // ============================================
+// Header Injection (Distributed Tracing)
+// ============================================
+
+export {
+  // URL matching
+  shouldPropagateTo,
+  shouldInjectHeaders,
+  isSameOrigin,
+  getUrlFromFetchInput,
+  // Header creation
+  createTraceHeaders,
+  // Injection
+  injectTracingHeaders,
+  injectXHRHeaders,
+  // Factory
+  createTracingHeaderInjector,
+} from './headerInjection.js';
+
+export type { TracingHeaderInjectorOptions } from './headerInjection.js';
+
+// ============================================
+// Trace Continuation
+// ============================================
+
+export {
+  // Extraction
+  extractIncomingTraceData,
+  extractTraceDataFromHeaders,
+  extractTraceDataFromObject,
+  // Context creation
+  createSpanContextFromTraceData,
+  // Continuation
+  continueTraceFromData,
+  continueTraceFromHeaders,
+  continueTraceWithOptions,
+  // Propagation context
+  getTracePropagationContext,
+} from './traceContinuation.js';
+
+export type {
+  IncomingTraceData,
+  ExtractTraceOptions,
+  ContinueTraceOptions,
+} from './traceContinuation.js';
+
+// ============================================
 // Browser tracing
 // ============================================
 

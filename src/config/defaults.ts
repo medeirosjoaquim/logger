@@ -8,6 +8,13 @@
 import type { InitOptions, ResolvedOptions } from './options';
 
 /**
+ * Default trace propagation targets.
+ * By default, propagate to same-origin requests only (empty array means same-origin).
+ * Add patterns like 'api.example.com' or /^https:\/\/api\./ to propagate to third parties.
+ */
+export const DEFAULT_TRACE_PROPAGATION_TARGETS: (string | RegExp)[] = [];
+
+/**
  * Default configuration values.
  * Applied when options are not explicitly provided.
  */
@@ -37,8 +44,9 @@ export const DEFAULT_OPTIONS: Partial<InitOptions> = {
   // Integrations
   defaultIntegrations: true,
 
-  // Tracing
+  // Tracing / Distributed Tracing
   propagateTraceparent: false,
+  tracePropagationTargets: DEFAULT_TRACE_PROPAGATION_TARGETS,
 
   // Universal Logger specific
   mode: 'standalone',

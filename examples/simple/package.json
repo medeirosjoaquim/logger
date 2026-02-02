@@ -5,15 +5,15 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "npx http-server -p 3000 -o --cors",
-    "start": "npm run dev"
+    "dev": "vite",
+    "start": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "keywords": [
     "sentry",
     "logger",
     "example",
     "demo"
-  ],
-  "devDependencies": {},
-  "dependencies": {}
+  ]
 }

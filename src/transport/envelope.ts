@@ -5,8 +5,9 @@
  * Compatible with Sentry envelope format specification.
  */
 
-import type { Event, SdkInfo, User } from '../types/sentry.js';
+import type { Event, SdkInfo, User, Attachment } from '../types/sentry.js';
 import { generateEventId } from '../tracing/idGenerator.js';
+import type { ScopeAttachment } from '../scope/scope.js';
 
 /**
  * Types of items that can be included in an envelope
@@ -317,6 +318,62 @@ export function createEventEnvelope(event: Event, dsn: Dsn): Envelope {
 }
 
 /**
+ * Options for creating an event envelope with attachments
+ */
+export interface CreateEventEnvelopeOptions {
+  /**
+   * Attachments to include in the envelope
+   */
+  attachments?: (Attachment | ScopeAttachment)[];
+}
+
+/**
+ * Create an envelope for an event with optional attachments
+ */
+export function createEventEnvelopeWithAttachments(
+  event: Event,
+  dsn: Dsn,
+  options?: CreateEventEnvelopeOptions
+): Envelope {
+  // Start with the base event envelope
+  let envelope = createEventEnvelope(event, dsn);
+
+  // Add attachments if provided
+  const attachments = options?.attachments;
+  if (attachments && attachments.length > 0) {
+    for (const attachment of attachments) {
+      envelope = addAttachmentToEnvelope(envelope, {
+        filename: attachment.filename,
+        data: attachment.data,
+        contentType: attachment.contentType,
+        attachmentType: attachment.attachmentType,
+      });
+    }
+  }
+
+  return envelope;
+}
+
+/**
+ * Add multiple attachments to an envelope
+ */
+export function addAttachmentsToEnvelope(
+  envelope: Envelope,
+  attachments: (Attachment | ScopeAttachment)[]
+): Envelope {
+  let result = envelope;
+  for (const attachment of attachments) {
+    result = addAttachmentToEnvelope(result, {
+      filename: attachment.filename,
+      data: attachment.data,
+      contentType: attachment.contentType,
+      attachmentType: attachment.attachmentType,
+    });
+  }
+  return result;
+}
+
+/**
  * Create an envelope for a session
  */
 export function createSessionEnvelope(session: Session, dsn: Dsn): Envelope {
@@ -353,28 +410,83 @@ export function createClientReportEnvelope(report: ClientReport, dsn: Dsn): Enve
 }
 
 /**
- * Add an attachment to an envelope
+ * Add an attachment to an envelope (synchronous)
+ * Note: For Blob attachments, use addAttachmentToEnvelopeAsync
  */
 export function addAttachmentToEnvelope(
   envelope: Envelope,
   attachment: {
     filename: string;
-    data: string | Uint8Array;
+    data: string | Uint8Array | Blob;
     contentType?: string;
     attachmentType?: string;
   }
 ): Envelope {
   const { filename, data, contentType, attachmentType } = attachment;
 
+  // Handle Blob type - warn and skip for sync function
+  if (typeof Blob !== 'undefined' && data instanceof Blob) {
+    console.warn('Blob attachments require async handling. Use addAttachmentToEnvelopeAsync instead.');
+    return envelope;
+  }
+
+  const dataBytes = data as string | Uint8Array;
   const item: EnvelopeItem = {
     header: {
       type: 'attachment',
       filename,
       content_type: contentType || 'application/octet-stream',
       attachment_type: attachmentType || 'event.attachment',
-      length: typeof data === 'string' ? new TextEncoder().encode(data).length : data.length,
+      length: typeof dataBytes === 'string' ? new TextEncoder().encode(dataBytes).length : dataBytes.length,
     },
-    payload: data,
+    payload: dataBytes,
+  };
+
+  return {
+    ...envelope,
+    items: [...envelope.items, item],
+  };
+}
+
+/**
+ * Add an attachment to an envelope (async)
+ * Supports Blob attachments in browser environments
+ */
+export async function addAttachmentToEnvelopeAsync(
+  envelope: Envelope,
+  attachment: {
+    filename: string;
+    data: string | Uint8Array | Blob;
+    contentType?: string;
+    attachmentType?: string;
+  }
+): Promise<Envelope> {
+  const { filename, data, contentType, attachmentType } = attachment;
+
+  let payloadData: string | Uint8Array;
+  let resolvedContentType = contentType;
+
+  if (typeof Blob !== 'undefined' && data instanceof Blob) {
+    // Convert Blob to Uint8Array
+    const arrayBuffer = await data.arrayBuffer();
+    payloadData = new Uint8Array(arrayBuffer);
+    // Use Blob's type if no content type specified
+    if (!resolvedContentType && data.type) {
+      resolvedContentType = data.type;
+    }
+  } else {
+    payloadData = data as string | Uint8Array;
+  }
+
+  const item: EnvelopeItem = {
+    header: {
+      type: 'attachment',
+      filename,
+      content_type: resolvedContentType || 'application/octet-stream',
+      attachment_type: attachmentType || 'event.attachment',
+      length: typeof payloadData === 'string' ? new TextEncoder().encode(payloadData).length : payloadData.length,
+    },
+    payload: payloadData,
   };
 
   return {

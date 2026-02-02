@@ -54,9 +54,9 @@ export interface Span {
  */
 export interface ScopeAttachment {
   filename: string;
-  data: string | Uint8Array;
+  data: string | Uint8Array | Blob;
   contentType?: string;
-  attachmentType?: string;
+  attachmentType?: 'event.attachment' | 'event.minidump' | 'event.applecrashreport' | 'event.view_hierarchy' | 'unreal.context' | 'unreal.logs';
 }
 
 /**

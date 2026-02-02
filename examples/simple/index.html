@@ -3,25 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Todo App - Sentry Logger Demo</title>
+  <title>Universal Logger - Complete Feature Demo</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       min-height: 100vh;
       padding: 20px;
     }
 
-    .container {
-      max-width: 600px;
-      margin: 0 auto;
-    }
+    .container { max-width: 800px; margin: 0 auto; }
 
     .header {
       text-align: center;
@@ -35,10 +28,8 @@
       text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
     }
 
-    .header p {
-      font-size: 1.1rem;
-      opacity: 0.9;
-    }
+    .header p { font-size: 1.1rem; opacity: 0.9; }
+    .header .subtitle { font-size: 0.95rem; opacity: 0.8; margin-top: 8px; }
 
     .card {
       background: white;
@@ -48,11 +39,24 @@
       margin-bottom: 20px;
     }
 
-    .todo-input-container {
+    .card-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #2d3748;
+      margin-bottom: 16px;
       display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
+      align-items: center;
+      gap: 8px;
     }
+
+    .card-description {
+      color: #718096;
+      font-size: 0.95rem;
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+
+    .todo-input-container { display: flex; gap: 10px; margin-bottom: 20px; }
 
     .todo-input {
       flex: 1;
@@ -63,51 +67,40 @@
       transition: border-color 0.2s;
     }
 
-    .todo-input:focus {
-      outline: none;
-      border-color: #667eea;
-    }
+    .todo-input:focus { outline: none; border-color: #667eea; }
 
     .btn {
-      padding: 12px 24px;
+      padding: 10px 18px;
       border: none;
       border-radius: 8px;
-      font-size: 1rem;
+      font-size: 0.9rem;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.2s;
       color: white;
     }
 
-    .btn:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+    .btn:active { transform: translateY(0); }
+
+    .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .btn-danger { background: #f56565; }
+    .btn-warning { background: #ed8936; }
+    .btn-success { background: #48bb78; }
+    .btn-info { background: #4299e1; }
+    .btn-purple { background: #9f7aea; }
+    .btn-teal { background: #38b2ac; }
+    .btn-pink { background: #ed64a6; }
+    .btn-gray { background: #718096; }
+    .btn-small { padding: 6px 12px; font-size: 0.85rem; }
+
+    .btn-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
     }
 
-    .btn:active {
-      transform: translateY(0);
-    }
-
-    .btn-primary {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    }
-
-    .btn-danger {
-      background: #f56565;
-    }
-
-    .btn-warning {
-      background: #ed8936;
-    }
-
-    .btn-small {
-      padding: 6px 12px;
-      font-size: 0.85rem;
-    }
-
-    .todo-list {
-      list-style: none;
-    }
+    .todo-list { list-style: none; }
 
     .todo-item {
       display: flex;
@@ -118,56 +111,12 @@
       transition: background-color 0.2s;
     }
 
-    .todo-item:hover {
-      background-color: #f7fafc;
-    }
+    .todo-item:hover { background-color: #f7fafc; }
+    .todo-item:last-child { border-bottom: none; }
+    .todo-item.completed .todo-text { text-decoration: line-through; opacity: 0.6; }
 
-    .todo-item:last-child {
-      border-bottom: none;
-    }
-
-    .todo-item.completed .todo-text {
-      text-decoration: line-through;
-      opacity: 0.6;
-    }
-
-    .todo-checkbox {
-      width: 20px;
-      height: 20px;
-      cursor: pointer;
-    }
-
-    .todo-text {
-      flex: 1;
-      font-size: 1rem;
-    }
-
-    .error-buttons {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 12px;
-      margin-top: 20px;
-    }
-
-    .info-box {
-      background: #edf2f7;
-      border-left: 4px solid #667eea;
-      padding: 16px;
-      border-radius: 8px;
-      margin-bottom: 20px;
-    }
-
-    .info-box h3 {
-      color: #2d3748;
-      margin-bottom: 8px;
-      font-size: 1.1rem;
-    }
-
-    .info-box p {
-      color: #4a5568;
-      font-size: 0.95rem;
-      line-height: 1.6;
-    }
+    .todo-checkbox { width: 20px; height: 20px; cursor: pointer; }
+    .todo-text { flex: 1; font-size: 1rem; }
 
     .stats {
       display: flex;
@@ -177,45 +126,120 @@
       border-top: 1px solid #e2e8f0;
     }
 
-    .stat {
-      text-align: center;
-    }
+    .stat { text-align: center; }
+    .stat-value { font-size: 2rem; font-weight: bold; color: #667eea; }
+    .stat-label { font-size: 0.85rem; color: #718096; margin-top: 4px; }
 
-    .stat-value {
-      font-size: 2rem;
-      font-weight: bold;
-      color: #667eea;
-    }
+    .empty-state { text-align: center; padding: 40px 20px; color: #a0aec0; }
+    .empty-state svg { width: 64px; height: 64px; margin-bottom: 16px; opacity: 0.5; }
 
-    .stat-label {
-      font-size: 0.85rem;
-      color: #718096;
-      margin-top: 4px;
-    }
-
-    .empty-state {
-      text-align: center;
-      padding: 40px 20px;
+    .section-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 8px 0;
       color: #a0aec0;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
-    .empty-state svg {
-      width: 64px;
-      height: 64px;
-      margin-bottom: 16px;
-      opacity: 0.5;
+    .section-divider::before,
+    .section-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #e2e8f0;
     }
+
+    /* Log Panel Styles */
+    .fab {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      z-index: 1000;
+    }
+
+    .fab:hover { transform: scale(1.1); }
+    .fab-icon { font-size: 24px; transition: transform 0.3s ease; }
+    .fab.open .fab-icon { transform: rotate(45deg); }
+
+    .fab-badge {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      background: #f56565;
+      color: white;
+      font-size: 11px;
+      font-weight: bold;
+      min-width: 20px;
+      height: 20px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 6px;
+    }
+
+    .fab-badge.hidden { display: none; }
+
+    .log-panel-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+      z-index: 999;
+    }
+
+    .log-panel-overlay.open { opacity: 1; visibility: visible; }
+
+    .log-panel {
+      position: fixed;
+      bottom: 0;
+      right: 0;
+      width: 520px;
+      max-width: 100%;
+      height: 70vh;
+      max-height: 600px;
+      background: #1a202c;
+      border-radius: 16px 16px 0 0;
+      transform: translateY(100%);
+      transition: transform 0.3s ease;
+      z-index: 1001;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .log-panel.open { transform: translateY(0); }
 
     .log-viewer {
       background: #1a202c;
-      border-radius: 12px;
+      border-radius: 16px 16px 0 0;
       padding: 20px;
       color: #e2e8f0;
       font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
       font-size: 0.85rem;
-      max-height: 500px;
-      overflow-y: auto;
-      margin-top: 20px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
     }
 
     .log-viewer-header {
@@ -225,18 +249,12 @@
       margin-bottom: 16px;
       padding-bottom: 12px;
       border-bottom: 1px solid #4a5568;
+      flex-shrink: 0;
     }
 
-    .log-viewer-title {
-      font-size: 1.1rem;
-      font-weight: 600;
-      color: #fff;
-    }
+    .log-viewer-title { font-size: 1.1rem; font-weight: 600; color: #fff; }
 
-    .log-viewer-actions {
-      display: flex;
-      gap: 8px;
-    }
+    .log-viewer-actions { display: flex; gap: 8px; }
 
     .btn-icon {
       padding: 6px 12px;
@@ -245,8 +263,11 @@
       color: #e2e8f0;
     }
 
-    .btn-icon:hover {
-      background: #4a5568;
+    .btn-icon:hover { background: #4a5568; }
+
+    #logContainer {
+      flex: 1;
+      overflow-y: auto;
     }
 
     .log-entry {
@@ -255,103 +276,138 @@
       border-radius: 6px;
       border-left: 3px solid;
       background: #2d3748;
+      animation: slideIn 0.2s ease-out;
     }
 
-    .log-entry.error {
-      border-left-color: #f56565;
-      background: rgba(245, 101, 101, 0.1);
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-10px); }
+      to { opacity: 1; transform: translateX(0); }
     }
 
-    .log-entry.warning {
-      border-left-color: #ed8936;
-      background: rgba(237, 137, 54, 0.1);
-    }
+    .log-entry.error { border-left-color: #f56565; background: rgba(245, 101, 101, 0.1); }
+    .log-entry.warning { border-left-color: #ed8936; background: rgba(237, 137, 54, 0.1); }
+    .log-entry.info { border-left-color: #4299e1; background: rgba(66, 153, 225, 0.1); }
+    .log-entry.debug { border-left-color: #a0aec0; background: rgba(160, 174, 192, 0.1); }
+    .log-entry.trace { border-left-color: #cbd5e0; background: rgba(203, 213, 224, 0.1); }
+    .log-entry.fatal { border-left-color: #e53e3e; background: rgba(229, 62, 62, 0.15); }
+    .log-entry.structured-log { border-left-color: #63b3ed; background: rgba(99, 179, 237, 0.08); }
+    .log-entry.metric { border-left-color: #68d391; background: rgba(104, 211, 145, 0.08); }
 
-    .log-entry.info {
-      border-left-color: #4299e1;
-      background: rgba(66, 153, 225, 0.1);
-    }
-
-    .log-entry.debug {
-      border-left-color: #a0aec0;
-      background: rgba(160, 174, 192, 0.1);
-    }
-
-    .log-meta {
-      display: flex;
-      gap: 12px;
-      font-size: 0.75rem;
-      color: #a0aec0;
-      margin-bottom: 4px;
-    }
-
-    .log-level {
-      font-weight: 600;
-      text-transform: uppercase;
-    }
-
+    .log-meta { display: flex; gap: 12px; font-size: 0.75rem; color: #a0aec0; margin-bottom: 4px; }
+    .log-level { font-weight: 600; text-transform: uppercase; }
     .log-level.error { color: #f56565; }
     .log-level.warning { color: #ed8936; }
     .log-level.info { color: #4299e1; }
     .log-level.debug { color: #a0aec0; }
 
-    .log-message {
-      color: #e2e8f0;
-      margin-bottom: 4px;
+    .log-message { color: #e2e8f0; margin-bottom: 4px; }
+    .log-error-type { font-weight: 600; color: #fc8181; font-size: 0.9rem; margin-bottom: 4px; }
+    .log-id { font-family: monospace; background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; }
+
+    .log-stack { margin-top: 8px; padding: 8px; background: rgba(0,0,0,0.3); border-radius: 4px; font-size: 0.75rem; }
+    .stack-frame { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .stack-frame:last-child { border-bottom: none; }
+    .stack-fn { color: #90cdf4; font-weight: 500; }
+    .stack-loc { color: #a0aec0; margin-left: 12px; white-space: nowrap; }
+    .stack-more { color: #718096; font-style: italic; padding-top: 4px; }
+
+    .log-empty { text-align: center; padding: 40px; color: #718096; }
+
+    /* Context Badges */
+    .log-context-badges { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 6px; }
+    .context-badge { 
+      font-size: 0.65rem; 
+      padding: 2px 6px; 
+      border-radius: 3px; 
+      font-weight: 600; 
+      text-transform: uppercase;
+    }
+    .context-badge.error-type { background: rgba(237, 137, 54, 0.3); color: #ed8936; }
+    .context-badge.http-status { background: rgba(245, 101, 101, 0.3); color: #f56565; }
+    .context-badge.log-type { background: rgba(66, 153, 225, 0.3); color: #63b3ed; }
+    .context-badge.metric-type { background: rgba(72, 187, 120, 0.3); color: #68d391; }
+
+    /* HTTP Info */
+    .log-http-info { 
+      display: flex; 
+      gap: 8px; 
+      align-items: center; 
+      margin: 4px 0; 
+      font-size: 0.75rem; 
+      flex-wrap: wrap;
+    }
+    .log-http-info .http-method { 
+      background: rgba(66, 153, 225, 0.3); 
+      color: #63b3ed; 
+      padding: 1px 6px; 
+      border-radius: 3px; 
+      font-weight: 600; 
+    }
+    .log-http-info .http-url { 
+      color: #a0aec0; 
+      font-family: monospace;
+    }
+    .log-http-info .http-timeout { 
+      color: #ed8936; 
+      font-size: 0.7rem; 
     }
 
-    .log-details {
-      font-size: 0.75rem;
+    /* Log Attributes (for structured logs) */
+    .log-attributes { 
+      display: flex; 
+      flex-wrap: wrap; 
+      gap: 6px; 
+      margin-top: 6px; 
+      font-size: 0.7rem;
+    }
+    .log-attributes .attr-item { 
+      background: rgba(255,255,255,0.1); 
+      padding: 2px 8px; 
+      border-radius: 4px; 
       color: #a0aec0;
-      margin-top: 4px;
+      font-family: monospace;
     }
 
-    .log-empty {
-      text-align: center;
-      padding: 40px;
-      color: #718096;
+    /* Notification Toast */
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #2d3748;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      transform: translateX(120%);
+      transition: transform 0.3s ease;
+      z-index: 2000;
     }
 
-    @keyframes slideIn {
-      from {
-        opacity: 0;
-        transform: translateX(-10px);
-      }
-      to {
-        opacity: 1;
-        transform: translateX(0);
-      }
-    }
+    .notification.show { transform: translateX(0); }
 
-    .log-entry {
-      animation: slideIn 0.2s ease-out;
+    @media (max-width: 520px) {
+      .log-panel { width: 100%; }
+      .btn-group { flex-direction: column; }
+      .btn-group .btn { width: 100%; }
     }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="header">
-      <h1>📝 Todo List</h1>
-      <p>Demo app with Universal Sentry Logger</p>
+      <h1>Universal Logger Demo</h1>
+      <p>Complete Feature Showcase</p>
+      <p class="subtitle">Metrics | Logs | Feature Flags | Feedback | Tracing | Attachments</p>
     </div>
 
+    <!-- Todo App Card -->
     <div class="card">
-      <div class="info-box">
-        <h3>🔍 What's happening?</h3>
-        <p>
-          This app uses our Universal Sentry-Compatible Logger (imported as <code>Sentry</code>).
-          All errors, breadcrumbs, and events are captured locally and visible in the debug panel below.
-        </p>
-      </div>
+      <h3 class="card-title">Todo List</h3>
+      <p class="card-description">A simple todo app with full event tracking. Every action is logged with breadcrumbs, metrics, and structured logs.</p>
 
       <div class="todo-input-container">
-        <input
-          type="text"
-          class="todo-input"
-          id="todoInput"
-          placeholder="What needs to be done?"
-          autofocus
-        >
+        <input type="text" class="todo-input" id="todoInput" placeholder="What needs to be done?" autofocus>
         <button class="btn btn-primary" id="addBtn">Add Todo</button>
       </div>
 
@@ -380,46 +436,116 @@
       </div>
     </div>
 
+    <!-- Metrics Demo -->
     <div class="card">
-      <h3 style="margin-bottom: 16px; color: #2d3748;">🐛 Error Testing Buttons</h3>
-      <p style="color: #718096; margin-bottom: 16px; font-size: 0.95rem;">
-        Click these buttons to trigger different types of errors and see them captured by the logger:
-      </p>
-      <div class="error-buttons">
-        <button class="btn btn-danger" id="throwErrorBtn">
-          Throw Error
-        </button>
-        <button class="btn btn-danger" id="throwTypeErrorBtn">
-          Throw TypeError
-        </button>
-        <button class="btn btn-danger" id="undefinedErrorBtn">
-          Undefined Error
-        </button>
-        <button class="btn btn-warning" id="badHttpBtn">
-          Bad HTTP Request
-        </button>
-        <button class="btn btn-warning" id="notFoundBtn">
-          404 Request
-        </button>
-        <button class="btn btn-warning" id="timeoutBtn">
-          Timeout Request
-        </button>
+      <h3 class="card-title">Metrics API</h3>
+      <p class="card-description">Track counters, gauges, distributions, timing, and unique sets. All metrics are aggregated and batched for efficient reporting.</p>
+      <div class="btn-group">
+        <button class="btn btn-info" id="metricsCounterBtn">Increment Counter</button>
+        <button class="btn btn-success" id="metricsGaugeBtn">Record Gauge</button>
+        <button class="btn btn-purple" id="metricsDistBtn">Distribution</button>
+        <button class="btn btn-teal" id="metricsTimingBtn">Timing</button>
+        <button class="btn btn-pink" id="metricsSetBtn">Unique Set</button>
       </div>
     </div>
 
-    <!-- Log Viewer -->
+    <!-- Structured Logs Demo -->
+    <div class="card">
+      <h3 class="card-title">Structured Logs</h3>
+      <p class="card-description">Six log levels with searchable attributes. Logs correlate with active spans for distributed tracing.</p>
+      <div class="btn-group">
+        <button class="btn btn-gray" id="logTraceBtn">Trace</button>
+        <button class="btn btn-gray" id="logDebugBtn">Debug</button>
+        <button class="btn btn-info" id="logInfoBtn">Info</button>
+        <button class="btn btn-warning" id="logWarnBtn">Warn</button>
+        <button class="btn btn-danger" id="logErrorBtn">Error</button>
+        <button class="btn btn-danger" id="logFatalBtn">Fatal</button>
+      </div>
+    </div>
+
+    <!-- Feature Flags Demo -->
+    <div class="card">
+      <h3 class="card-title">Feature Flags</h3>
+      <p class="card-description">Track feature flag evaluations. Flag states are attached to error events for debugging feature-related issues.</p>
+      <div class="btn-group">
+        <button class="btn btn-purple" id="flagCheckBtn">Check Flag</button>
+        <button class="btn btn-teal" id="flagToggleBtn">Toggle Random Flag</button>
+        <button class="btn btn-info" id="flagListBtn">List All Flags</button>
+      </div>
+    </div>
+
+    <!-- Attachments Demo -->
+    <div class="card">
+      <h3 class="card-title">Attachments</h3>
+      <p class="card-description">Attach files to error events for rich debugging context. Supports text, JSON, and binary data.</p>
+      <div class="btn-group">
+        <button class="btn btn-info" id="attachTextBtn">Attach Text</button>
+        <button class="btn btn-success" id="attachJsonBtn">Attach JSON</button>
+        <button class="btn btn-purple" id="attachBinaryBtn">Attach Binary</button>
+      </div>
+    </div>
+
+    <!-- Tracing Demo -->
+    <div class="card">
+      <h3 class="card-title">Distributed Tracing</h3>
+      <p class="card-description">Create spans to track operations. Spans propagate trace context across services via headers.</p>
+      <div class="btn-group">
+        <button class="btn btn-teal" id="tracingSimpleBtn">Simple Span</button>
+        <button class="btn btn-purple" id="tracingNestedBtn">Nested Spans</button>
+        <button class="btn btn-info" id="tracingManualBtn">Manual Span</button>
+      </div>
+    </div>
+
+    <!-- Feedback Demo -->
+    <div class="card">
+      <h3 class="card-title">User Feedback</h3>
+      <p class="card-description">Collect user feedback with optional screenshots. Feedback can be associated with error events.</p>
+      <div class="btn-group">
+        <button class="btn btn-success" id="feedbackDialogBtn">Open Feedback Dialog</button>
+      </div>
+      <p style="margin-top: 12px; font-size: 0.85rem; color: #718096;">Also check the floating feedback button on the left!</p>
+    </div>
+
+    <!-- Error Testing -->
+    <div class="card">
+      <h3 class="card-title">Error Testing</h3>
+      <p class="card-description">Trigger various error types to see them captured with full stack traces, breadcrumbs, and context.</p>
+      <div class="section-divider">JavaScript Errors</div>
+      <div class="btn-group" style="margin-bottom: 16px;">
+        <button class="btn btn-danger" id="throwErrorBtn">Throw Error</button>
+        <button class="btn btn-danger" id="throwTypeErrorBtn">TypeError</button>
+        <button class="btn btn-danger" id="undefinedErrorBtn">Undefined Access</button>
+      </div>
+      <div class="section-divider">HTTP Errors</div>
+      <div class="btn-group">
+        <button class="btn btn-warning" id="badHttpBtn">500 Error</button>
+        <button class="btn btn-warning" id="notFoundBtn">404 Not Found</button>
+        <button class="btn btn-warning" id="timeoutBtn">Timeout</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating Action Button -->
+  <button class="fab" id="logToggleBtn" title="Toggle Event Log">
+    <span class="fab-icon">Log</span>
+    <span class="fab-badge hidden" id="errorBadge">0</span>
+  </button>
+
+  <!-- Log Panel Overlay -->
+  <div class="log-panel-overlay" id="logPanelOverlay"></div>
+
+  <!-- Log Panel -->
+  <div class="log-panel" id="logPanel">
     <div class="log-viewer">
       <div class="log-viewer-header">
-        <div class="log-viewer-title">📊 Sentry Event Log</div>
+        <div class="log-viewer-title">Event Log</div>
         <div class="log-viewer-actions">
-          <button class="btn btn-icon" id="refreshLogsBtn">🔄 Refresh</button>
-          <button class="btn btn-icon" id="clearLogsBtn">🗑️ Clear</button>
+          <button class="btn btn-icon" id="refreshLogsBtn">Refresh</button>
+          <button class="btn btn-icon" id="clearLogsBtn">Clear</button>
         </div>
       </div>
       <div id="logContainer">
-        <div class="log-empty">
-          No events captured yet. Interact with the app or click error buttons above!
-        </div>
+        <div class="log-empty">No events captured yet. Interact with the app!</div>
       </div>
     </div>
   </div>

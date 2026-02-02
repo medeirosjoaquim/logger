@@ -38,9 +38,8 @@ export { IndexedDBStorageProvider } from './indexeddb.js';
 export { ZustandStorageProvider } from './zustand.js';
 export type { ZustandStorageOptions, LoggerState, LoggerStateWithActions } from './zustand.js';
 
-// Export React hooks for Zustand provider
-export { createLoggerHooks } from './react.js';
-export type { LoggerHooks } from './react.js';
+// React hooks are NOT exported here to avoid requiring React as a dependency.
+// Import from '@universal-logger/core/react' instead for React hooks.
 
 // Import for factory function
 import type { StorageProvider, StorageProviderConfig } from './types.js';

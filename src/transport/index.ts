@@ -33,20 +33,54 @@ export type {
   Session,
   SessionStatus,
   ClientReport,
+  CreateEventEnvelopeOptions,
 } from './envelope.js';
 
 export {
   parseDsn,
   getEnvelopeEndpoint,
   createEventEnvelope,
+  createEventEnvelopeWithAttachments,
   createSessionEnvelope,
   createClientReportEnvelope,
   addAttachmentToEnvelope,
+  addAttachmentToEnvelopeAsync,
+  addAttachmentsToEnvelope,
   serializeEnvelope,
   serializeEnvelopeToBytes,
   parseEnvelope,
   getEnvelopeSize,
 } from './envelope.js';
+
+// Attachments
+export type {
+  AttachmentType,
+  AttachmentValidationResult,
+  EncodedAttachment,
+} from './attachments.js';
+
+export {
+  MAX_ATTACHMENT_SIZE,
+  MAX_TOTAL_ATTACHMENTS_SIZE,
+  DEFAULT_ATTACHMENT_TYPE,
+  getAttachmentSize,
+  validateAttachment,
+  validateAttachmentsSize,
+  encodeAttachment,
+  encodeAttachmentAsync,
+  createAttachmentEnvelopeItem,
+  createAttachmentEnvelopeItemAsync,
+  createAttachmentEnvelopeItems,
+  createAttachmentEnvelopeItemsAsync,
+  inferContentType,
+  filterAttachments,
+  dropAttachmentsByFilename,
+  dropAttachmentsBySize,
+  keepAttachmentsByContentType,
+  createTextAttachment,
+  createJsonAttachment,
+  createBinaryAttachment,
+} from './attachments.js';
 
 // Rate Limiting
 export {

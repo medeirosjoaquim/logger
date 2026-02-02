@@ -30,9 +30,9 @@ export function init(options: import('./types').InitOptions): void {
 // Capture methods
 export function captureException(
   exception: unknown,
-  hint?: import('./types').EventHint
+  captureContext?: import('./types').CaptureContext
 ): string {
-  return logger.captureException(exception, hint);
+  return logger.captureException(exception, captureContext);
 }
 
 export function captureMessage(
@@ -76,6 +76,15 @@ export function setUser(user: import('./types').User | null): void {
 
 export function addBreadcrumb(breadcrumb: import('./types').Breadcrumb): void {
   logger.addBreadcrumb(breadcrumb);
+}
+
+// Attachments
+export function addAttachment(attachment: import('./types').Attachment): void {
+  logger.addAttachment(attachment);
+}
+
+export function clearAttachments(): void {
+  logger.clearAttachments();
 }
 
 // Scope
@@ -169,6 +178,43 @@ export {
   generateTraceId,
   generateSpanId,
   generateEventId,
+
+  // Propagation headers
+  generateSentryTraceHeader,
+  parseSentryTraceHeader,
+  generateBaggageHeader,
+  parseBaggageHeader,
+  getPropagationHeaders,
+  extractTraceContext,
+
+  // Distributed tracing - header injection
+  shouldPropagateTo,
+  shouldInjectHeaders,
+  injectTracingHeaders,
+  injectXHRHeaders,
+  createTraceHeaders,
+  createTracingHeaderInjector,
+
+  // Distributed tracing - trace continuation
+  extractIncomingTraceData,
+  extractTraceDataFromHeaders,
+  extractTraceDataFromObject,
+  continueTraceFromHeaders,
+  continueTraceWithOptions,
+  getTracePropagationContext,
+} from './tracing';
+
+export type {
+  // Header injection types
+  TracingHeaderInjectorOptions,
+  // Trace continuation types
+  IncomingTraceData,
+  ExtractTraceOptions,
+  ContinueTraceOptions,
+  // Core tracing types
+  DynamicSamplingContext,
+  TracePropagationData,
+  ParsedSentryTrace,
 } from './tracing';
 
 export {
@@ -235,6 +281,109 @@ export {
 } from './integrations';
 
 // ============================================
+// Metrics API
+// ============================================
+export {
+  // Main metrics object (Sentry-style)
+  metrics,
+  // Metrics class
+  Metrics,
+  // Singleton functions
+  getMetrics,
+  initMetrics,
+  resetMetrics,
+  increment,
+  gauge,
+  distribution,
+  set,
+  timing,
+  flushMetrics,
+  // Utilities
+  createScopedMetrics,
+  measureAsync,
+  measureSync,
+  // Aggregator
+  MetricsAggregator,
+  // Envelope utilities
+  createMetricEnvelope,
+  serializeMetricEnvelope,
+  formatStatsdLine,
+  formatStatsdBatch,
+  // Types
+  type MetricUnit,
+  type MetricType,
+  type MetricOptions,
+  type MetricData,
+  type MetricsConfig,
+  type MetricsAPI,
+  type StatsdMetric,
+  type MetricBucket,
+  type AggregatedMetric,
+  type MetricEnvelope,
+} from './metrics';
+
+// Import metrics for default export
+import { metrics } from './metrics';
+
+// ============================================
+// Structured Logs API
+// ============================================
+import { logger as structuredLogger } from './structuredLogs';
+
+// Export as Sentry.logger for API compatibility
+export { structuredLogger as logger };
+
+export {
+  // Logger classes and functions
+  StructuredLogger,
+  getLogger,
+  initLogger as initStructuredLogger,
+  resetLogger,
+
+  // Types
+  type LogLevel,
+  type LogAttributes,
+  type LogRecord,
+  type LoggerOptions,
+  type LoggerAPI,
+  type LogEnvelopeItem,
+  type LogBatch,
+  type ConsoleMethod,
+  type ConsoleIntegrationOptions as LogConsoleIntegrationOptions,
+  type ParameterizedLogMessage,
+
+  // Constants
+  LogLevelValues,
+  SeverityNumbers,
+  LogLevelToSeverity,
+  isParameterizedLogMessage,
+
+  // Envelope utilities
+  type LogEnvelopeHeaders,
+  type LogEnvelope,
+  type LogEnvelopeOptions,
+  logRecordToEnvelopeItem,
+  convertAttributesToEnvelopeFormat,
+  createLogBatch,
+  createLogEnvelope,
+  serializeLogEnvelope,
+  serializeLogEnvelopeToBytes,
+  parseLogEnvelope,
+  getLogEnvelopeSize,
+  splitIntoEnvelopes,
+  mergeLogEnvelopes,
+
+  // Console integration
+  installConsoleIntegration,
+  uninstallConsoleIntegration,
+  isConsoleIntegrationActive,
+  updateConsoleIntegrationOptions,
+  consoleLoggingIntegration,
+  withoutConsoleCapture,
+  createConsoleProxy,
+} from './structuredLogs';
+
+// ============================================
 // Feedback
 // ============================================
 export {
@@ -243,9 +392,16 @@ export {
   createFeedbackWidget,
   validateFeedback,
   defaultFeedbackFormConfig,
+  showReportDialog,
+  captureScreenshot,
+  createFeedbackWidgetButton,
+  removeFeedbackWidgetButton,
   type FeedbackEvent,
+  type FeedbackWithScreenshot,
   type SendFeedbackOptions,
   type FeedbackFormConfig,
+  type ReportDialogOptions,
+  type FeedbackWidgetOptions,
 } from './core/feedback';
 
 // ============================================
@@ -286,6 +442,62 @@ export {
   type SentryEvent,
   type SentryEventFilter,
 } from './storage';
+
+// ============================================
+// Attachment Utilities
+// ============================================
+export {
+  MAX_ATTACHMENT_SIZE,
+  MAX_TOTAL_ATTACHMENTS_SIZE,
+  validateAttachment,
+  validateAttachmentsSize,
+  encodeAttachment,
+  encodeAttachmentAsync,
+  createTextAttachment,
+  createJsonAttachment,
+  createBinaryAttachment,
+  filterAttachments,
+  dropAttachmentsByFilename,
+  dropAttachmentsBySize,
+  keepAttachmentsByContentType,
+  type AttachmentType,
+  type AttachmentValidationResult,
+  type EncodedAttachment,
+} from './transport/attachments';
+
+// ============================================
+// Feature Flags
+// ============================================
+export {
+  // Integration
+  featureFlagsIntegration,
+  getFeatureFlagsIntegration,
+  setFeatureFlagsIntegration,
+  resetFeatureFlagsIntegration,
+
+  // Public API
+  addFeatureFlagEvaluation,
+  getFeatureFlagEvaluations,
+  getFeatureFlags,
+  clearFeatureFlagEvaluations,
+  getFeatureFlag,
+  hasFeatureFlag,
+  getFeatureFlagHistory,
+} from './featureFlags';
+
+export type {
+  FeatureFlagValue,
+  FeatureFlagEvaluation,
+  FeatureFlagContext,
+  FeatureFlagsIntegration,
+  FeatureFlagsIntegrationOptions,
+  FeatureFlagAdapter,
+  AdapterOptions,
+  LaunchDarklyAdapterOptions,
+  StatsigAdapterOptions,
+  UnleashAdapterOptions,
+  OpenFeatureAdapterOptions,
+} from './featureFlags';
 
 // ============================================
 // Init helpers
@@ -462,8 +674,76 @@ export type {
 } from './storage/types';
 
 // ============================================
+// AI Agent Monitoring
+// ============================================
+export {
+  // Main API
+  aiMonitoring,
+  getActiveAISpan,
+  createAIMonitoring,
+
+  // Span helpers
+  startAgentSpan,
+  startToolSpan,
+  startPipelineSpan,
+  startPipelineStepSpan,
+  recordTokenUsage,
+  recordCost,
+  recordModelInfo,
+  recordFinishReason,
+  startChatCompletionSpan,
+  startEmbeddingSpan,
+  finalizeStreamingSpan,
+
+  // Client wrappers
+  wrapOpenAIClient,
+  wrapAnthropicClient,
+
+  // Manual instrumentation
+  instrumentChatCompletion,
+  instrumentEmbeddings,
+  instrumentAnthropicMessage,
+
+  // Utilities
+  calculateAnthropicCost,
+  parseAnthropicModel,
+} from './ai';
+
+export type {
+  // Core types
+  AIMonitoring,
+  AISpanAttributes,
+  TokenUsage,
+
+  // Span options
+  AgentSpanOptions,
+  ToolSpanOptions,
+  AIPipelineOptions,
+
+  // Wrapper options
+  WrapOpenAIOptions,
+  WrapAnthropicOptions,
+
+  // Response types
+  ChatMessage,
+  ChatCompletionResponse,
+  CompletionUsage,
+  EmbeddingsResponse,
+  OpenAIStreamEvent,
+  AnthropicMessageResponse,
+  AnthropicStreamEvent,
+
+  // Utility types
+  AIOperationType,
+  AIProvider,
+  FinishReason,
+} from './ai';
+
+// ============================================
 // Default export
 // ============================================
+import { aiMonitoring } from './ai';
+
 export default {
   init,
   captureException,
@@ -476,6 +756,8 @@ export default {
   setExtras,
   setUser,
   addBreadcrumb,
+  addAttachment,
+  clearAttachments,
   withScope,
   withIsolationScope,
   getCurrentScope,
@@ -491,4 +773,10 @@ export default {
   startSession,
   endSession,
   captureSession,
+  // Structured Logs API (Sentry.logger)
+  logger: structuredLogger,
+  // Metrics API (Sentry.metrics)
+  metrics,
+  // AI Agent Monitoring
+  ai: aiMonitoring,
 };
