@@ -1007,6 +1007,83 @@ baggage: sentry-trace_id=<id>,sentry-sample_rate=<rate>,...
 
 ---
 
+## Task 30: Logger Factory Pattern (Named Instances)
+
+**Phase**: 20 - Core Architecture Enhancement
+**Priority**: HIGH
+**Status**: [x] Completed
+
+### Description
+Implement factory pattern to support multiple named logger instances with different storage providers. Enables `logger.create('name', provider)` API to fulfill the end goal of creating isolated loggers for different app modules.
+
+### User End Goal
+```javascript
+const mylogger = logger.create('provider');
+// Allows collecting data, tracking errors
+// If I already have sentry.functionXYZ, logger will just work as well
+```
+
+### Deliverables
+- [ ] `UniversalLogger.create(name, options)` - Factory method for named instances
+- [ ] `UniversalLogger.get(name)` - Retrieve existing named instance
+- [ ] `UniversalLogger.destroy(name)` - Destroy specific named instance
+- [ ] `UniversalLogger.destroyAll()` - Destroy all named instances
+- [ ] Per-instance storage provider configuration
+- [ ] Per-instance scope isolation
+- [ ] Registry to track all named instances
+- [ ] Backward compatibility with singleton pattern
+
+### API Signature
+```typescript
+// Create named logger with specific provider
+const authLogger = UniversalLogger.create('auth', {
+  storage: 'memory',
+  maxBreadcrumbs: 100,
+});
+
+const apiLogger = UniversalLogger.create('api', {
+  storage: 'indexeddb',
+  dsn: 'https://xxx@sentry.io/123',
+});
+
+// Use like regular Sentry
+authLogger.captureException(error);
+authLogger.setTag('module', 'auth');
+
+apiLogger.captureMessage('API called');
+apiLogger.setTag('module', 'api');
+
+// Retrieve existing
+const sameAuthLogger = UniversalLogger.get('auth');
+
+// Cleanup
+UniversalLogger.destroy('auth');
+UniversalLogger.destroyAll();
+```
+
+### Factory Options
+```typescript
+interface NamedLoggerOptions {
+  storage?: 'memory' | 'indexeddb' | StorageProvider;
+  dsn?: string;  // Sentry DSN for proxy mode
+  maxBreadcrumbs?: number;
+  sampleRate?: number;
+  beforeSend?: (event: Event) => Event | null;
+  environment?: string;
+  release?: string;
+}
+```
+
+### Acceptance Criteria
+- Multiple named loggers can coexist
+- Each logger has isolated storage
+- Factory API matches user end goal pattern
+- No conflicts between named instances
+- Singleton pattern still works for backward compatibility
+- Proper cleanup/destroy functionality
+
+---
+
 ## Summary
 
 | Phase | Tasks | Priority |
@@ -1030,8 +1107,9 @@ baggage: sentry-trace_id=<id>,sentry-sample_rate=<rate>,...
 | Phase 17: Profiling | 27 | LOW |
 | Phase 18: Attachments | 28 | MEDIUM |
 | Phase 19: Distributed Tracing | 29 | HIGH |
+| Phase 20: Factory Pattern | 30 | HIGH |
 
-**Total Tasks**: 29
+**Total Tasks**: 30
 **HIGH Priority**: 15
 **MEDIUM Priority**: 11
 **LOW Priority**: 3
