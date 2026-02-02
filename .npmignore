@@ -1,0 +1,50 @@
+# Source files (only dist/ should be published)
+src/
+tsconfig.json
+vitest.config.ts
+
+# Tests
+**/*.test.ts
+**/*.test.tsx
+**/__tests__/
+coverage/
+
+# Examples
+examples/
+
+# Documentation (keep README, LICENSE, CHANGELOG)
+PRD.md
+tasks.md
+tasksv1.md
+NPM_PUBLISH_CHECKLIST.md
+REPOSITORY_URL_UPDATE.md
+CONTRIBUTING.md
+
+# Development files
+.git/
+.github/
+.vscode/
+.idea/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build artifacts
+*.tsbuildinfo
+.DS_Store
+Thumbs.db
+
+# Scripts
+scripts/
+
+# Config files
+.eslintrc*
+.prettierrc*
+.editorconfig
+
+# Misc
+*.md.backup
+.env
+.env.local
+.env.*.local
