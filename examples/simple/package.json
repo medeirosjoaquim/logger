@@ -1,0 +1,19 @@
+{
+  "name": "universal-logger-simple-example",
+  "version": "1.0.0",
+  "description": "Simple todo app demonstrating Universal Sentry-Compatible Logger",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "npx http-server -p 3000 -o --cors",
+    "start": "npm run dev"
+  },
+  "keywords": [
+    "sentry",
+    "logger",
+    "example",
+    "demo"
+  ],
+  "devDependencies": {},
+  "dependencies": {}
+}

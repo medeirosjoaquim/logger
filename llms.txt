@@ -1,0 +1,851 @@
+# Universal Logger - Complete Documentation
+
+This is comprehensive documentation for Universal Logger (v0.1.0+), a drop-in Sentry SDK replacement with local debugging capabilities.
+
+## Document Structure
+
+### 1. **Getting Started**
+- **Installation**: Package setup, peer dependencies, TypeScript configuration
+- **Quick Start**: Basic initialization patterns, storage configuration
+- **Core Concepts**: Sentry compatibility, storage providers, debugging workflow
+
+### 2. **Core Features**
+- **Event Capture**: Exceptions, messages, custom events
+- **Enrichment**: Tags, contexts, extras, user data
+- **Breadcrumbs**: Automatic and manual tracking
+- **Tracing**: Spans, transactions, performance monitoring
+- **Sessions**: User session tracking and aggregation
+- **Feedback**: User feedback capture with forms
+- **Storage**: IndexedDB, Memory, Zustand providers
+- **Transport**: Offline queue, rate limiting, envelope system
+
+## Overview
+
+Universal Logger is a **Sentry-compatible logging library** that provides:
+- 100% Sentry SDK API compatibility
+- Local storage for offline development and debugging
+- Optional forwarding to Sentry in production
+- React debugging UI for real-time log inspection
+- Drop-in replacement requiring zero code changes
+
+## Installation
+
+```bash
+npm install @universal-logger/core
+```
+
+### Peer Dependencies
+
+```json
+{
+  "react": ">=17.0.0",        // Optional, for React UI
+  "react-dom": ">=17.0.0",    // Optional, for React UI
+  "zustand": ">=4.0.0"        // Optional, for Zustand storage
+}
+```
+
+### TypeScript Support
+
+Fully typed with TypeScript 5.3+. All types are exported from the main package.
+
+## Quick Start
+
+### Basic Setup (Local Only)
+
+```typescript
+import * as Logger from '@universal-logger/core';
+
+Logger.init({
+  dsn: 'local', // Use local storage only
+  storage: 'indexeddb', // or 'memory'
+  environment: 'development',
+  debug: true,
+});
+```
+
+### Production Setup (with Sentry)
+
+```typescript
+Logger.init({
+  dsn: 'https://your-sentry-dsn@sentry.io/project',
+  storage: 'indexeddb',
+  forwardToSentry: true, // Send to both local storage AND Sentry
+  environment: 'production',
+  tracesSampleRate: 1.0,
+  beforeSend(event) {
+    // Process event before sending
+    return event;
+  },
+});
+```
+
+### React Debug UI
+
+```tsx
+import { DebugPanel } from '@universal-logger/core/react';
+
+function App() {
+  return (
+    <div>
+      {/* Your app */}
+      <DebugPanel position="bottom-right" />
+    </div>
+  );
+}
+```
+
+## Core API
+
+### Event Capture
+
+```typescript
+// Capture exceptions
+try {
+  riskyOperation();
+} catch (error) {
+  Logger.captureException(error, {
+    level: 'error',
+    tags: { module: 'payment' },
+  });
+}
+
+// Capture messages
+Logger.captureMessage('Payment processed', {
+  level: 'info',
+  tags: { userId: '123' },
+});
+
+// Capture custom events
+Logger.captureEvent({
+  message: 'Custom event',
+  level: 'warning',
+  extra: { customData: {...} },
+});
+```
+
+### Enrichment API
+
+```typescript
+// Set user context
+Logger.setUser({
+  id: '123',
+  email: 'user@example.com',
+  username: 'john_doe',
+});
+
+// Add tags
+Logger.setTag('environment', 'production');
+Logger.setTags({ version: '1.0.0', region: 'us-east' });
+
+// Add context
+Logger.setContext('payment', {
+  amount: 99.99,
+  currency: 'USD',
+});
+
+// Add extra data
+Logger.setExtra('debugInfo', { timestamp: Date.now() });
+```
+
+### Breadcrumbs
+
+```typescript
+// Manual breadcrumbs
+Logger.addBreadcrumb({
+  type: 'navigation',
+  category: 'ui',
+  message: 'User clicked checkout',
+  level: 'info',
+  data: { buttonId: 'checkout-btn' },
+});
+
+// Automatic breadcrumbs (enabled by default)
+// - Console logs
+// - HTTP requests
+// - DOM events
+// - Navigation
+```
+
+### Scopes
+
+```typescript
+// Temporary scope for specific context
+Logger.withScope((scope) => {
+  scope.setTag('section', 'checkout');
+  scope.setLevel('warning');
+  Logger.captureMessage('Payment initiated');
+});
+
+// Isolation scope (lasts until cleared)
+Logger.withIsolationScope((scope) => {
+  scope.setUser({ id: '123' });
+  // User context persists across events
+});
+
+// Get current scope
+const scope = Logger.getCurrentScope();
+scope.setTag('page', 'dashboard');
+```
+
+## Tracing
+
+### Automatic Performance Tracking
+
+```typescript
+Logger.init({
+  dsn: 'local',
+  tracesSampleRate: 1.0, // 100% of transactions
+  integrations: [
+    Logger.browserIntegration(), // Auto-instrument browser
+  ],
+});
+```
+
+### Manual Spans
+
+```typescript
+// Start a span with automatic finish
+const result = Logger.startSpan(
+  {
+    name: 'process-payment',
+    op: 'payment',
+    attributes: { amount: 99.99 },
+  },
+  (span) => {
+    // Work happens here
+    span.setAttribute('status', 'success');
+    return processPayment();
+  }
+);
+
+// Manual span control
+const span = Logger.startInactiveSpan({
+  name: 'background-task',
+  op: 'task',
+});
+
+try {
+  await doWork();
+  span.setStatus({ code: SpanStatusCode.OK });
+} catch (error) {
+  span.setStatus({ code: SpanStatusCode.ERROR });
+  span.recordException(error);
+} finally {
+  span.end();
+}
+```
+
+### Transaction API
+
+```typescript
+import { startTransaction } from '@universal-logger/core';
+
+const transaction = startTransaction({
+  name: 'checkout-flow',
+  op: 'navigation',
+  source: 'custom',
+});
+
+// Child span
+const span = transaction.startChild({
+  op: 'http',
+  description: 'POST /api/payment',
+});
+
+span.setHttpStatus(200);
+span.finish();
+
+transaction.finish();
+```
+
+### Browser Tracing
+
+```typescript
+import {
+  startBrowserTracingPageLoadSpan,
+  startBrowserTracingNavigationSpan,
+  reportPageLoaded
+} from '@universal-logger/core';
+
+// Page load tracking
+const pageLoadSpan = startBrowserTracingPageLoadSpan();
+
+window.addEventListener('load', () => {
+  reportPageLoaded();
+});
+
+// Navigation tracking (SPA)
+function navigateTo(path: string) {
+  const navSpan = startBrowserTracingNavigationSpan({
+    name: path,
+    op: 'navigation',
+  });
+
+  // Navigation happens
+
+  navSpan.finish();
+}
+```
+
+## Sessions
+
+### Session Management
+
+```typescript
+// Start a session
+Logger.startSession({
+  userId: '123',
+  environment: 'production',
+});
+
+// End session
+Logger.endSession();
+
+// Capture session (send to backend)
+Logger.captureSession(true); // true = end after capture
+```
+
+### Session Data
+
+```typescript
+import { SessionManager } from '@universal-logger/core';
+
+const sessionManager = new SessionManager(storageProvider);
+
+sessionManager.startSession();
+
+// Session automatically tracks:
+// - Started timestamp
+// - Duration
+// - Status (ok, exited, crashed, abnormal)
+// - Error count
+// - Release/environment
+```
+
+## Integrations
+
+### Default Integrations
+
+```typescript
+import {
+  browserIntegration,
+  httpIntegration,
+  breadcrumbsIntegration,
+  tryCatchIntegration,
+  getDefaultIntegrations,
+} from '@universal-logger/core';
+
+Logger.init({
+  dsn: 'local',
+  integrations: getDefaultIntegrations({
+    // Customize defaults
+    breadcrumbs: { console: true, dom: true },
+    http: { failedRequestStatusCodes: [400, 599] },
+  }),
+});
+```
+
+### Custom Integration
+
+```typescript
+const myIntegration = {
+  name: 'MyIntegration',
+  setupOnce() {
+    // Setup code runs once
+  },
+  processEvent(event) {
+    // Modify events before capture
+    event.tags = { ...event.tags, custom: 'value' };
+    return event;
+  },
+};
+
+Logger.addIntegration(myIntegration);
+```
+
+## Storage Providers
+
+### IndexedDB (Recommended for Production)
+
+```typescript
+import { createStorageProvider } from '@universal-logger/core';
+
+const storage = createStorageProvider('indexeddb', {
+  dbName: 'app-logger',
+  version: 1,
+  maxLogs: 10000,
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+});
+
+Logger.init({ storage });
+```
+
+### Memory (Development/Testing)
+
+```typescript
+const storage = createStorageProvider('memory', {
+  maxLogs: 1000,
+});
+```
+
+### Auto-Select Best Provider
+
+```typescript
+import { createBestStorageProvider } from '@universal-logger/core';
+
+const storage = createBestStorageProvider({
+  maxLogs: 5000,
+});
+// Uses IndexedDB if available, falls back to Memory
+```
+
+### Query Local Logs
+
+```typescript
+import {
+  getLocalLogs,
+  searchLogs,
+  getRecentErrors,
+  getLogsForTrace,
+  exportLogs
+} from '@universal-logger/core';
+
+// Get all logs
+const logs = await getLocalLogs({ limit: 100 });
+
+// Search logs
+const results = await searchLogs({
+  query: 'payment',
+  level: 'error',
+  startDate: new Date('2024-01-01'),
+  endDate: new Date(),
+});
+
+// Get recent errors
+const errors = await getRecentErrors(10);
+
+// Get logs for specific trace
+const traceLogs = await getLogsForTrace(traceId);
+
+// Export for debugging
+const json = await exportLogs({ format: 'json' });
+const csv = await exportLogs({ format: 'csv' });
+```
+
+## Transport
+
+### Offline Support
+
+```typescript
+Logger.init({
+  dsn: 'https://sentry.io/...',
+  transport: {
+    offline: {
+      enabled: true,
+      maxQueueSize: 100,
+      flushInterval: 60000, // 1 minute
+    },
+  },
+});
+
+// Events are queued when offline
+// Automatically flushed when back online
+```
+
+### Rate Limiting
+
+```typescript
+Logger.init({
+  dsn: 'local',
+  transport: {
+    rateLimit: {
+      maxEvents: 100,
+      window: 60000, // per minute
+    },
+  },
+});
+```
+
+### Custom Transport
+
+```typescript
+import { Transport } from '@universal-logger/core';
+
+class CustomTransport implements Transport {
+  async send(envelope) {
+    // Send to your backend
+    await fetch('/api/logs', {
+      method: 'POST',
+      body: JSON.stringify(envelope),
+    });
+
+    return { status: 'success' };
+  }
+}
+
+Logger.init({
+  dsn: 'local',
+  transport: () => new CustomTransport(),
+});
+```
+
+## Feedback
+
+### User Feedback Forms
+
+```typescript
+import {
+  createFeedbackWidget,
+  captureFeedback,
+} from '@universal-logger/core';
+
+// Create feedback widget
+const widget = createFeedbackWidget({
+  colorScheme: 'light',
+  showName: true,
+  showEmail: true,
+  submitButtonLabel: 'Send Feedback',
+  formTitle: 'Report a Bug',
+});
+
+// Attach to button
+document.querySelector('#feedback-btn')
+  .addEventListener('click', () => widget.open());
+
+// Programmatic feedback
+Logger.captureFeedback({
+  name: 'John Doe',
+  email: 'john@example.com',
+  message: 'Great app!',
+  associatedEventId: Logger.lastEventId(),
+});
+```
+
+## React Components
+
+### Debug Panel
+
+```tsx
+import { DebugPanel } from '@universal-logger/core/react';
+
+<DebugPanel
+  position="bottom-right"
+  defaultOpen={false}
+  showStats={true}
+  maxLogs={500}
+/>
+```
+
+### useLogger Hook
+
+```tsx
+import { useLogger } from '@universal-logger/core/react';
+
+function MyComponent() {
+  const {
+    logs,
+    errors,
+    stats,
+    clearLogs,
+    isEnabled
+  } = useLogger();
+
+  return (
+    <div>
+      <h3>Total Logs: {stats.total}</h3>
+      <h3>Errors: {stats.errors}</h3>
+      <button onClick={clearLogs}>Clear</button>
+
+      {logs.map(log => (
+        <LogEntry key={log.id} log={log} />
+      ))}
+    </div>
+  );
+}
+```
+
+## Advanced Patterns
+
+### Sampling
+
+```typescript
+Logger.init({
+  dsn: 'https://sentry.io/...',
+
+  // Sample 20% of errors
+  sampleRate: 0.2,
+
+  // Sample 10% of performance traces
+  tracesSampleRate: 0.1,
+
+  // Dynamic sampling
+  tracesSampler: (samplingContext) => {
+    if (samplingContext.transactionContext.name === 'critical-path') {
+      return 1.0; // 100% for critical paths
+    }
+    return 0.1; // 10% for others
+  },
+});
+```
+
+### Event Processors
+
+```typescript
+Logger.addEventProcessor((event, hint) => {
+  // Filter out specific errors
+  if (event.exception?.values?.[0]?.type === 'NetworkError') {
+    return null; // Drop event
+  }
+
+  // Add custom data
+  event.tags = {
+    ...event.tags,
+    processed: 'true',
+  };
+
+  return event;
+});
+```
+
+### beforeSend / beforeBreadcrumb
+
+```typescript
+Logger.init({
+  dsn: 'local',
+
+  beforeSend(event, hint) {
+    // Scrub sensitive data
+    if (event.request?.cookies) {
+      delete event.request.cookies;
+    }
+    return event;
+  },
+
+  beforeBreadcrumb(breadcrumb, hint) {
+    // Filter breadcrumbs
+    if (breadcrumb.category === 'console') {
+      return null; // Drop console breadcrumbs
+    }
+    return breadcrumb;
+  },
+});
+```
+
+### Error Fingerprinting
+
+```typescript
+Logger.init({
+  dsn: 'local',
+  beforeSend(event) {
+    // Custom grouping
+    if (event.exception?.values?.[0]) {
+      event.fingerprint = [
+        event.exception.values[0].type,
+        event.exception.values[0].value?.substring(0, 50),
+      ];
+    }
+    return event;
+  },
+});
+```
+
+## File Conventions
+
+### Package Exports
+
+```json
+{
+  ".": {
+    "import": "./dist/index.js",
+    "types": "./dist/index.d.ts"
+  },
+  "./react": {
+    "import": "./dist/ui/index.js",
+    "types": "./dist/ui/index.d.ts"
+  }
+}
+```
+
+### Module Structure
+
+```
+@universal-logger/core
+├── Core Logger (init, capture, enrichment)
+├── Tracing (spans, transactions, performance)
+├── Storage (indexeddb, memory, zustand)
+├── Transport (envelope, queue, offline)
+├── Integrations (browser, http, breadcrumbs)
+├── Sessions (tracking, aggregation)
+├── Scope (context isolation)
+└── React UI (DebugPanel, hooks)
+```
+
+## Performance Best Practices
+
+1. **Use IndexedDB in production** for better performance and persistence
+2. **Enable sampling** to reduce data volume in high-traffic apps
+3. **Lazy-load debug UI** in production builds
+4. **Set maxLogs limit** to prevent unbounded memory growth
+5. **Use beforeSend** to filter unnecessary events before storage
+6. **Batch breadcrumbs** instead of adding them one-by-one in loops
+7. **Clean up old logs** periodically with maxAge configuration
+
+## Migration from Sentry SDK
+
+Universal Logger is a drop-in replacement. Simply change imports:
+
+```typescript
+// Before
+import * as Sentry from '@sentry/browser';
+
+Sentry.init({ dsn: '...' });
+Sentry.captureException(error);
+
+// After
+import * as Logger from '@universal-logger/core';
+
+Logger.init({ dsn: 'local' }); // or forward to Sentry
+Logger.captureException(error);
+```
+
+All Sentry APIs are supported with identical signatures.
+
+## Type Exports
+
+```typescript
+// Core types
+import type {
+  Event,
+  EventId,
+  EventHint,
+  Exception,
+  Stacktrace,
+  StackFrame,
+  Breadcrumb,
+  User,
+  CaptureContext,
+  SeverityLevel,
+  Scope,
+} from '@universal-logger/core';
+
+// Tracing types
+import type {
+  Span,
+  SpanContext,
+  SpanStatus,
+  Transaction,
+  TransactionContext,
+  StartSpanOptions,
+} from '@universal-logger/core';
+
+// Storage types
+import type {
+  StorageProvider,
+  LogEntry,
+  LogFilter,
+  SentryEvent,
+} from '@universal-logger/core';
+
+// Integration types
+import type {
+  Integration,
+  IntegrationFn,
+  DefaultIntegrationsOptions,
+} from '@universal-logger/core';
+```
+
+## Example: Complete Setup
+
+```typescript
+import * as Logger from '@universal-logger/core';
+import { DebugPanel } from '@universal-logger/core/react';
+
+// Initialize
+Logger.init({
+  dsn: process.env.NODE_ENV === 'production'
+    ? 'https://sentry.io/...'
+    : 'local',
+  environment: process.env.NODE_ENV,
+  release: '1.0.0',
+
+  // Storage
+  storage: 'indexeddb',
+  storageConfig: {
+    maxLogs: 5000,
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  },
+
+  // Sampling
+  sampleRate: 0.8,
+  tracesSampleRate: 0.1,
+
+  // Integrations
+  integrations: [
+    Logger.browserIntegration(),
+    Logger.httpIntegration(),
+    Logger.breadcrumbsIntegration({
+      console: true,
+      dom: true,
+      fetch: true,
+      xhr: true,
+    }),
+  ],
+
+  // Processing
+  beforeSend(event) {
+    // Scrub PII
+    if (event.request?.headers) {
+      delete event.request.headers.Authorization;
+    }
+    return event;
+  },
+
+  beforeBreadcrumb(breadcrumb) {
+    // Filter noisy breadcrumbs
+    if (breadcrumb.category === 'ui.click' &&
+        breadcrumb.message?.includes('analytics')) {
+      return null;
+    }
+    return breadcrumb;
+  },
+});
+
+// Set global context
+Logger.setUser({
+  id: user.id,
+  email: user.email,
+  username: user.username,
+});
+
+Logger.setTags({
+  version: '1.0.0',
+  region: 'us-east',
+});
+
+// React component
+function App() {
+  return (
+    <div>
+      {/* Your app */}
+
+      {process.env.NODE_ENV === 'development' && (
+        <DebugPanel position="bottom-right" />
+      )}
+    </div>
+  );
+}
+```
+
+## Summary
+
+Universal Logger provides:
+- **100% Sentry compatibility** with identical API surface
+- **Local-first debugging** with IndexedDB/Memory storage
+- **Optional Sentry forwarding** for production monitoring
+- **Full tracing support** for performance monitoring
+- **React debugging UI** for real-time log inspection
+- **Offline support** with automatic queue and retry
+- **Flexible integrations** for browser, HTTP, and custom instrumentation
+- **Type-safe API** with full TypeScript support
+
+This enables a seamless workflow: develop locally with full debugging visibility, deploy to production with optional Sentry integration, all without changing a single line of application code.
